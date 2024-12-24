@@ -1,0 +1,24 @@
+---
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: default
+  namespace: openshift-ingress-operator
+  annotations:
+    argocd.argoproj.io.io/sync-option: ServerSideApply=true
+spec:
+  replicas: 1
+  defaultCertificate:
+    name: ingress-certs
+  nodePlacement:
+    # nodeSelector:
+    #   matchLabels:
+    #     node-role.kubernetes.io/ingress: ""
+    tolerations:
+    - key: node-role.kubernetes.io/infra
+      value: reserved
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/infra
+      value: reserved
+      effect: NoExecute
+...

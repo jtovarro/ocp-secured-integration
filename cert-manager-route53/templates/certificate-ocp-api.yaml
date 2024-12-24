@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "10"
 spec:
+  isCA: false
   commonName: "api.{{ .Values.clusterDomain }}" 
   dnsNames:
   - "api.{{ .Values.clusterDomain }}" 
