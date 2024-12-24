@@ -3,16 +3,16 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   labels:
-    app: cert-manager
-  name: cert-manager
+    app: cert-manager-operator
+  name: cert-manager-operator
   namespace: gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
   project: default
   source:
-    path: cert-manager
-    repoURL: https://github.com/alvarolop/ocp-secure-integration.git
+    path: cert-manager-operator
+    repoURL: https://github.com/alvarolop/ocp-secured-integration.git
     targetRevision: main
   syncPolicy:
     automated:

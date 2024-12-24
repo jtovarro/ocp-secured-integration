@@ -1,6 +1,6 @@
 apiVersion: v2
-name: cert-manager
-description: A Helm chart to install and configure cert-manager in OpenShift
+name: cert-manager-route53
+description: A Helm chart to configure cert-manager for the default certificates in OpenShift
 
 # A chart can be either an 'application' or a 'library' chart.
 #
