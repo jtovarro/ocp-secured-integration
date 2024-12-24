@@ -41,11 +41,9 @@ while [[ $(oc get pods -l app.kubernetes.io/instance=cert-manager -n cert-manage
 helm template cert-manager-route53 --set clusterDomain=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}')  | oc apply -f -
 ```
 
-To do list:
-
-* #TODO#: Trust the AWS CA in the ClusterIssuer.
-* #TODO#: Add support for self-signed certificates.
-
+> [!CAUTION] To do list:
+> * Trust the AWS CA in the ClusterIssuer.
+> * Add support for self-signed certificates.
 
 
 ### Debugging cert-manager
