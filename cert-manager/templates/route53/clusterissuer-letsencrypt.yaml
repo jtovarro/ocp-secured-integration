@@ -5,6 +5,7 @@ metadata:
   name: letsencrypt
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "05"
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory

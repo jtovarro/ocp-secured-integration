@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     path: cert-manager
-    repoURL: https://github.com/alvarolop/ocp-secured-integration.git
+    repoURL: https://github.com/alvarolop/ocp-secure-integration.git
     targetRevision: main
   syncPolicy:
     automated:
