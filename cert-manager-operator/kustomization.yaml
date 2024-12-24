@@ -10,3 +10,5 @@ resources:
 
   - og-openshift-cert-manager-operator.yaml
   - sub-openshift-cert-manager-operator.yaml
+
+  - certmanager-cluster.yaml
