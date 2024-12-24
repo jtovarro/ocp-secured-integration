@@ -1,11 +1,4 @@
 ---
-{{- $clusterDomainFromValues := .Values.clusterDomain | default "" -}}
-{{- if eq $clusterDomainFromValues "" -}}
-  {{- $dnsConfig := lookup "config.openshift.io/v1" "DNS" "cluster" "" -}}
-  {{- $clusterDomain := (hasKey $dnsConfig.spec "baseDomain" | ternary $dnsConfig.spec.baseDomain .Values.clusterDomain | default "default.cluster.local") -}}
-{{- else -}}
-  {{- $clusterDomain := $clusterDomainFromValues -}}
-{{- end }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

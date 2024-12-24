@@ -14,6 +14,10 @@ spec:
     path: cert-manager-route53
     repoURL: https://github.com/alvarolop/ocp-secured-integration.git
     targetRevision: main
+    helm:
+      parameters:
+        - name: clusterDomain
+          value: $CLUSTER_DOMAIN
   syncPolicy:
     automated:
       prune: false
