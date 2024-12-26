@@ -9,7 +9,7 @@ This repository explores some of the integrations with credentials and certifica
     - [2.2. Debugging cert-manager](#22-debugging-cert-manager)
     - [2.3. Useful Links](#23-useful-links)
   - [3. Hashicorp Vault](#3-hashicorp-vault)
-    - [3.1. Installation and configuration](#31-installation-and-configuration)
+    - [3.1. Installation and access](#31-installation-and-access)
     - [3.2. Useful Links](#32-useful-links)
   - [4. External Secrets Operator](#4-external-secrets-operator)
     - [4.1. Installation and configuration](#41-installation-and-configuration)
@@ -93,12 +93,19 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 [HashiCorp Vault](https://www.hashicorp.com/products/vault) is a secrets management tool that integrates seamlessly with OpenShift (OCP) to securely store and manage sensitive information like API keys, credentials, and certificates. It enables dynamic secrets generation and automated secret renewal, reducing manual overhead and improving security. When combined with OCP, Vault ensures that applications running in your cluster can securely access secrets with fine-grained access control, enhancing the overall security posture of your workloads.
 
 
-### 3.1. Installation and configuration
+### 3.1. Installation and access
+
+To install Hashicorp Vault on OpenShift, the recommended mechanism is to deploy it with the Helm Chart. For that reason, I've created the following application with the simplest configuration to deploy on OpenShift and automatically create a Route in `dev` mode:
 
 ```bash
 oc apply -f application-hashicorp-vault.yaml
 ```
 
+In order to access the deployed Vault server, just retrieve the route using the following command and access the UI using the token `root`:
+
+```bash
+oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host}}"
+```
 
 
 
@@ -118,6 +125,7 @@ oc apply -f application-hashicorp-vault.yaml
 
 ## 4. External Secrets Operator
 
+[External Secrets Operator](https://external-secrets.io/latest) is a Kubernetes operator that integrates external secret management systems like AWS Secrets Manager, HashiCorp Vault, Google Secrets Manager, Azure Key Vault, IBM Cloud Secrets Manager, CyberArk Conjur, Pulumi ESC and many more. The operator reads information from external APIs and automatically injects the values into a Kubernetes Secret.
 
 
 ### 4.1. Installation and configuration
