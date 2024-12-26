@@ -12,3 +12,5 @@ resources:
   - sub-openshift-cert-manager-operator.yaml
 
   - certmanager-cluster.yaml
+
+  - cert-manager-monitoring

@@ -26,7 +26,7 @@ This repository demonstrates how to securely integrate an OpenShift cluster with
 
 In order to split installation of the operator and post-configuration, I've split `cert-manager` resources in three different ArgoCD applications:
 
-1. `cert-manager-operator` will install the operator as well as create aws credentials using the Cluster Credentials Operator to allow the operator to perform DNS requests to validate the URIs of the certificates.
+1. `cert-manager-operator` will install the operator as well as create aws credentials using the Cluster Credentials Operator to allow the operator to perform DNS requests to validate the URIs of the certificates. It also configures metrics retrieval so that you can configure its metrics (Prefixed by `certmanager_`).
 2. `cert-manager-route53` application will create the actual Certificate Issuer and certificates for the API server and the Ingress and apply them to the cluster.
 3. `cert-manager-self-signed` is just a configuration example on how to create a self-signed certificate and use it to issue certificates for your own services. This does not have a real use-case, it is just a demonstration.
 
@@ -71,6 +71,8 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 * Blog: [YAUB - Managing Certificates using GitOps approach](https://blog.stderr.at/gitopscollection/2024-07-04-managing-certificates-with-gitops/).
 * Blog: [Automatic certificate issuing with IdM and cert-manager operator for OpenShift](https://developers.redhat.com/articles/2024/12/17/automatic-certificate-issuing-idm-and-cert-manager-operator-openshift).
 * Blog: [Let's Encrypt - Challenge Types](https://letsencrypt.org/docs/challenge-types/): This is a summary of how challenges work for certificates.
+* Git: [Cert Manager Mixin](https://gitlab.com/uneeq-oss/cert-manager-mixin) is a collection of reusable and configurable Prometheus alerts, and a Grafana dashboard to help with operating cert-manager.
+
 
 
 
