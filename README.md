@@ -109,6 +109,8 @@ oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host
 
 
 
+
+
 ### 3.2. Useful Links
 
 * Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the Hashicorp Vault Helm repo.
@@ -130,9 +132,14 @@ oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host
 
 ### 4.1. Installation and configuration
 
+External-secrets can be managed by Operator Lifecycle Manager (OLM) via an installer operator. This is the best alternative for OpenShift. This operator can be installed using the following ArgoCD application:
 
+```bash
+oc apply -f application-external-secrets-operator.yaml
+```
 
 ### 4.2. Useful Links
 
 
 * https://external-secrets.io/latest/
+* https://github.com/external-secrets/external-secrets-helm-operator
