@@ -10,7 +10,7 @@ spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     # email: mail@example.com # Replace with your email
-    skipTLSVerify: true
+    # skipTLSVerify: true
     privateKeySecretRef:
       name: letsencrypt-key
     solvers:
