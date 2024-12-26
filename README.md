@@ -3,26 +3,29 @@
 This repository explores some of the integrations with credentials and certificates providers.
 
 - [OpenShift Secured Integration](#openshift-secured-integration)
-  - [Introduction](#introduction)
-  - [Cert manager](#cert-manager)
-    - [Installation and configuration](#installation-and-configuration)
-    - [Debugging cert-manager](#debugging-cert-manager)
-    - [Useful Links](#useful-links)
-  - [Hashicorp Vault](#hashicorp-vault)
-    - [Installation and configuration](#installation-and-configuration-1)
-    - [Useful Links](#useful-links-1)
+  - [1. Introduction](#1-introduction)
+  - [2. Cert manager](#2-cert-manager)
+    - [2.1. Installation and configuration](#21-installation-and-configuration)
+    - [2.2. Debugging cert-manager](#22-debugging-cert-manager)
+    - [2.3. Useful Links](#23-useful-links)
+  - [3. Hashicorp Vault](#3-hashicorp-vault)
+    - [3.1. Installation and configuration](#31-installation-and-configuration)
+    - [3.2. Useful Links](#32-useful-links)
+  - [4. External Secrets Operator](#4-external-secrets-operator)
+    - [4.1. Installation and configuration](#41-installation-and-configuration)
+    - [4.2. Useful Links](#42-useful-links)
 
 
-## Introduction
+## 1. Introduction
 
 This repository demonstrates how to securely integrate an OpenShift cluster with **HashiCorp Vault** for managing secrets and credentials, and **cert-manager** for automating certificate creation and renewal. You'll find deployment guides, step-by-step instructions, and example configurations to streamline your setup. Dive in to simplify and secure your cluster's secrets and certificates management!
 
 
-## Cert manager
+## 2. Cert manager
 
 [cert-manager](https://docs.openshift.com/container-platform/4.17/security/cert_manager_operator/index.html) is a Kubernetes add-on to automate the management and issuance of TLS certificates from various issuing sources. It will ensure certificates are valid and up to date periodically, and attempt to renew certificates at an appropriate time before expiry.
 
-### Installation and configuration
+### 2.1. Installation and configuration
 
 In order to split installation of the operator and post-configuration, I've split `cert-manager` resources in three different ArgoCD applications:
 
@@ -45,7 +48,7 @@ oc apply -k cert-manager-self-signed
 ```
 
 
-### Debugging cert-manager
+### 2.2. Debugging cert-manager
 
 `cert-manager` is a simple operator, but if you are just starting to play with it, you might need some guidance to better understand what is going on. Here you can find some debugging tips:
 
@@ -64,7 +67,7 @@ Check the certificate used in the connections:
 echo Q | openssl s_client -connect $(oc get route console -n openshift-console --template="{{.spec.host}}"):443 -showcerts 2>/dev/null | openssl x509 -noout -subject -issuer -enddate
 ```
 
-### Useful Links
+### 2.3. Useful Links
 
 * Docs: [cert-manager Operator for Red Hat OpenShift](https://docs.openshift.com/container-platform/4.17/security/cert_manager_operator/index.html).
 * Blog: [YAUB - SSL Certificate Management for OpenShift on AWS](https://blog.stderr.at/openshift/2023/02/ssl-certificate-management-for-openshift-on-aws/).
@@ -76,23 +79,36 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 
 
 
-## Hashicorp Vault
-
-
-HashiCorp Vault is a secrets management tool that integrates seamlessly with OpenShift (OCP) to securely store and manage sensitive information like API keys, credentials, and certificates. It enables dynamic secrets generation and automated secret renewal, reducing manual overhead and improving security. When combined with OCP, Vault ensures that applications running in your cluster can securely access secrets with fine-grained access control, enhancing the overall security posture of your workloads.
-
-
-### Installation and configuration
 
 
 
 
-### Useful Links
 
+
+
+
+## 3. Hashicorp Vault
+
+
+[HashiCorp Vault](https://www.hashicorp.com/products/vault) is a secrets management tool that integrates seamlessly with OpenShift (OCP) to securely store and manage sensitive information like API keys, credentials, and certificates. It enables dynamic secrets generation and automated secret renewal, reducing manual overhead and improving security. When combined with OCP, Vault ensures that applications running in your cluster can securely access secrets with fine-grained access control, enhancing the overall security posture of your workloads.
+
+
+### 3.1. Installation and configuration
+
+```bash
+oc apply -f application-hashicorp-vault.yaml
+```
+
+
+
+
+### 3.2. Useful Links
+
+* Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the Hashicorp Vault Helm repo.
+* Blog: [In-Depth Hashicorp Vault setup on OpenShift using OpenShift GitOps](https://stephennimmo.com/2024/05/05/hashicorp-vault-setup-on-openshift-using-argocd): This is a must read. It is an updated blog on how to customize the Hashicorp Vault deployment.
 
 * https://www.youtube.com/watch?v=LDx6pCOahgE&t=2s
 * https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-openshift
-
 * https://developer.hashicorp.com/vault/docs/platform/k8s/helm/openshift
 
 
@@ -100,7 +116,15 @@ HashiCorp Vault is a secrets management tool that integrates seamlessly with Ope
 
 
 
+## 4. External Secrets Operator
 
 
 
+### 4.1. Installation and configuration
 
+
+
+### 4.2. Useful Links
+
+
+* https://external-secrets.io/latest/
