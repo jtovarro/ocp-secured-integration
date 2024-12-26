@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Generate initial Self-signed CA 
+  - clusterissuer-selfsigned-cluster-issuer.yaml
+
+  # Use the Self-Signed CA to sign a second CA and created a ClusterIssuer based on it
+  - certificate-selfsigned-root-ca.yaml
+  - clusterissuer-ca-issuer.yaml
+
+  # Use the second Issuer to generate certificates
+  - certificate-example.yaml

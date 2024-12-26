@@ -44,10 +44,6 @@ helm template cert-manager-route53 --set clusterDomain=$(oc get dns.config/clust
 oc apply -k cert-manager-self-signed
 ```
 
-> [!CAUTION]
-> * Trust the AWS CA in the ClusterIssuer.
-> * Add support for self-signed certificates.
-
 
 ### Debugging cert-manager
 

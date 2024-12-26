@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    app: cert-manager-self-signed
+  name: cert-manager-self-signed
+  namespace: gitops
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    path: cert-manager-self-signed
+    repoURL: https://github.com/alvarolop/ocp-secured-integration.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false

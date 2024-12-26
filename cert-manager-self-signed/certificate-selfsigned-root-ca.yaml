@@ -1,0 +1,17 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: selfsigned-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: selfsigned-root-ca # Note this
+  secretName: root-ca-key-pair #----(2)
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-cluster-issuer # match (1)
+    kind: ClusterIssuer
+    group: cert-manager.io
