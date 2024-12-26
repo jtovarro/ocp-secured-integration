@@ -24,10 +24,11 @@ This repository demonstrates how to securely integrate an OpenShift cluster with
 
 ### Installation and configuration
 
-In order to split installation of the operator and post-configuration, I've split `cert-manager` resources in two different ArgoCD applications:
+In order to split installation of the operator and post-configuration, I've split `cert-manager` resources in three different ArgoCD applications:
 
 1. `cert-manager-operator` will install the operator as well as create aws credentials using the Cluster Credentials Operator to allow the operator to perform DNS requests to validate the URIs of the certificates.
 2. `cert-manager-route53` application will create the actual Certificate Issuer and certificates for the API server and the Ingress and apply them to the cluster.
+3. `cert-manager-self-signed` is just a configuration example on how to create a self-signed certificate and use it to issue certificates for your own services. This does not have a real use-case, it is just a demonstration.
 
 Do you want to deploy it in your cluster **without ArgoCD**? You can copy the following piece of code and execute it in your cluster:
 
@@ -37,11 +38,13 @@ oc apply -k cert-manager-operator
 # 2) Wait for the operator to be ready
 echo -n "Waiting for cert-manager pods to be ready..."
 while [[ $(oc get pods -l app.kubernetes.io/instance=cert-manager -n cert-manager -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True True True" ]]; do echo -n "." && sleep 1; done; echo -n -e "  [OK]\n"
-# 3) Configure the certificates
+# 3) Configure the OpenShift certificates for Ingress and API
 helm template cert-manager-route53 --set clusterDomain=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}')  | oc apply -f -
+# 4) Configure custom certificates using self-signed
+oc apply -k cert-manager-self-signed
 ```
 
-> [!CAUTION] To do list:
+> [!CAUTION] To do list
 > * Trust the AWS CA in the ClusterIssuer.
 > * Add support for self-signed certificates.
 
@@ -55,6 +58,15 @@ helm template cert-manager-route53 --set clusterDomain=$(oc get dns.config/clust
 * The `Certificate` resource is the main object you use to request certificates, but if you want to see the issuing status, check the `certificaterequest` or, more importantly, the `order` resource.
 * If you request a cert in a secret `$NAME`, there is an intermediate step in which it will create an auxiliary secret named `$SECRET-suffix` that will then be deleted after proper issuing. Just relax and wait 😄
 
+```bash
+oc get certificate,certificaterequest,order -A
+```
+
+Check the certificate used in the connections:
+
+```bash
+echo Q | openssl s_client -connect $(oc get route console -n openshift-console --template="{{.spec.host}}"):443 -showcerts 2>/dev/null | openssl x509 -noout -subject -issuer -enddate
+```
 
 ### Useful Links
 
