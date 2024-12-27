@@ -11,9 +11,16 @@ This repository explores some of the integrations with credentials and certifica
   - [3. Hashicorp Vault](#3-hashicorp-vault)
     - [3.1. Installation and access](#31-installation-and-access)
     - [3.2. Useful Links](#32-useful-links)
-  - [4. External Secrets Operator](#4-external-secrets-operator)
-    - [4.1. Installation and configuration](#41-installation-and-configuration)
-    - [4.2. Useful Links](#42-useful-links)
+  - [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
+  - [5. Secrets Store CSI Driver](#5-secrets-store-csi-driver)
+    - [5.1. Installation and configuration](#51-installation-and-configuration)
+  - [6. Vault Secrets Operator (VSO)](#6-vault-secrets-operator-vso)
+    - [6.1. Installation and configuration](#61-installation-and-configuration)
+  - [7. Vault Agent Injector](#7-vault-agent-injector)
+  - [8. External Secrets Operator (ESO)](#8-external-secrets-operator-eso)
+    - [8.1. Installation and configuration](#81-installation-and-configuration)
+    - [8.2. Useful Links](#82-useful-links)
+  - [9. ArgoCD Vault Plugin](#9-argocd-vault-plugin)
 
 
 ## 1. Introduction
@@ -87,6 +94,9 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 
 
 
+
+
+
 ## 3. Hashicorp Vault
 
 
@@ -108,9 +118,6 @@ oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host
 ```
 
 
-
-
-
 ### 3.2. Useful Links
 
 * Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the Hashicorp Vault Helm repo.
@@ -125,12 +132,82 @@ oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host
 
 
 
-## 4. External Secrets Operator
+
+
+
+
+
+
+## 4. Handling secrets on OpenShift
+
+Managing secrets securely is a cornerstone of modern application security. OpenShift, while offering built-in support for Kubernetes secrets, benefits greatly from the advanced features and dynamic nature of HashiCorp Vault. This section explores multiple approaches to integrate Vault with OCP, evaluating their benefits, drawbacks, and integration with ArgoCD.
+
+Here are some common methods for using secrets from HashiCorp Vault in OpenShift environments:
+
+
+| **Tool**                       | **Description**                              | **Advantages**                                      | **Disadvantages**                                   |
+|--------------------------------|----------------------------------------------|---------------------------------------------------|----------------------------------------------------|
+| HashiCorp Vault API/SDKs and CLI | Direct integration with applications.         | Dynamic secrets, centralized management.          | Complex integration in application code, dependency on Vault availability. |
+| Vault Agent Injector           | Injects secrets into pods via a sidecar.     | Secrets not stored in Kubernetes Secrets, supports dynamic secrets. | Requires sidecar for each pod, complex setup.      |
+| Secrets Store CSI Driver       | Mounts secrets as volumes in pods.           | Simplifies secret consumption, works across multiple backends. | Secrets not dynamically refreshed, requires additional driver. |
+| Vault Secrets Operator (VSO)   | Syncs Vault secrets to Kubernetes Secrets.   | Kubernetes-native integration, automates secret updates. | Secrets stored in Kubernetes Secrets, requires operator resources. |
+| External Secrets Operator (ESO)| Syncs secrets from external providers.        | Multi-provider support, GitOps-friendly.          | Secrets persisted in Kubernetes Secrets, sync delays possible. |
+| ArgoCD Vault Plugin            | Fetches secrets during manifest rendering.   | Tight GitOps integration, supports encrypted secrets. | Adds complexity to the pipeline setup.            |
+
+
+
+
+
+
+
+
+## 5. Secrets Store CSI Driver
+
+The [Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction) `secrets-store.csi.k8s.io` allows Kubernetes to mount multiple secrets, keys, and certs stored in enterprise-grade external secrets stores into their pods as a volume. Once the Volume is attached, the data in it is mounted into the container’s file system.
+
+
+
+### 5.1. Installation and configuration
+
+
+
+
+
+
+
+
+## 6. Vault Secrets Operator (VSO)
+
+[The Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso/openshift) allows Pods to consume Vault secrets and HCP Vault Secrets Apps natively from Kubernetes Secrets. The Operator writes the source Vault secret data directly to the destination Kubernetes Secret, ensuring that any changes made to the source are replicated to the destination over its lifetime.
+
+
+### 6.1. Installation and configuration
+
+
+```bash
+oc apply -f application-vault-secrets-operator.yaml
+```
+
+
+
+
+## 7. Vault Agent Injector
+
+The [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector) alters pod specifications to include Vault Agent containers that render Vault secrets to a shared memory volume using Vault Agent Templates. By rendering secrets to a shared volume, containers within the pod can consume Vault secrets without being Vault aware.
+
+The injector is a Kubernetes Mutation Webhook Controller. The controller intercepts pod events and applies mutations to the pod if annotations exist within the request. This functionality is provided by the vault-k8s project and can be automatically installed and configured using the Vault Helm chart.
+
+
+
+
+
+
+## 8. External Secrets Operator (ESO)
 
 [External Secrets Operator](https://external-secrets.io/latest) is a Kubernetes operator that integrates external secret management systems like AWS Secrets Manager, HashiCorp Vault, Google Secrets Manager, Azure Key Vault, IBM Cloud Secrets Manager, CyberArk Conjur, Pulumi ESC and many more. The operator reads information from external APIs and automatically injects the values into a Kubernetes Secret.
 
 
-### 4.1. Installation and configuration
+### 8.1. Installation and configuration
 
 External-secrets can be managed by Operator Lifecycle Manager (OLM) via an installer operator. This is the best alternative for OpenShift. This operator can be installed using the following ArgoCD application:
 
@@ -138,8 +215,19 @@ External-secrets can be managed by Operator Lifecycle Manager (OLM) via an insta
 oc apply -f application-external-secrets-operator.yaml
 ```
 
-### 4.2. Useful Links
+### 8.2. Useful Links
 
 
 * https://external-secrets.io/latest/
 * https://github.com/external-secrets/external-secrets-helm-operator
+* https://www.redhat.com/en/blog/external-secrets-with-hashicorp-vault
+
+
+
+
+
+
+## 9. ArgoCD Vault Plugin
+
+
+* argocd-vault-plugin: https://github.com/argoproj-labs/argocd-vault-plugin
