@@ -122,10 +122,7 @@ oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host
 
 * Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the Hashicorp Vault Helm repo.
 * Blog: [In-Depth Hashicorp Vault setup on OpenShift using OpenShift GitOps](https://stephennimmo.com/2024/05/05/hashicorp-vault-setup-on-openshift-using-argocd): This is a must read. It is an updated blog on how to customize the Hashicorp Vault deployment.
-
-* https://www.youtube.com/watch?v=LDx6pCOahgE&t=2s
-* https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-openshift
-* https://developer.hashicorp.com/vault/docs/platform/k8s/helm/openshift
+* Hashicorp Tutorial: [Install Vault to Red Hat OpenShift](https://developer.hashicorp.com/vault/docs/platform/k8s/helm/openshift) 
 
 
 
@@ -145,14 +142,14 @@ Managing secrets securely is a cornerstone of modern application security. OpenS
 Here are some common methods for using secrets from HashiCorp Vault in OpenShift environments:
 
 
-| **Tool**                       | **Description**                              | **Advantages**                                      | **Disadvantages**                                   |
-|--------------------------------|----------------------------------------------|---------------------------------------------------|----------------------------------------------------|
-| HashiCorp Vault API/SDKs and CLI | Direct integration with applications.         | Dynamic secrets, centralized management.          | Complex integration in application code, dependency on Vault availability. |
-| Vault Agent Injector           | Injects secrets into pods via a sidecar.     | Secrets not stored in Kubernetes Secrets, supports dynamic secrets. | Requires sidecar for each pod, complex setup.      |
-| Secrets Store CSI Driver       | Mounts secrets as volumes in pods.           | Simplifies secret consumption, works across multiple backends. | Secrets not dynamically refreshed, requires additional driver. |
-| Vault Secrets Operator (VSO)   | Syncs Vault secrets to Kubernetes Secrets.   | Kubernetes-native integration, automates secret updates. | Secrets stored in Kubernetes Secrets, requires operator resources. |
-| External Secrets Operator (ESO)| Syncs secrets from external providers.        | Multi-provider support, GitOps-friendly.          | Secrets persisted in Kubernetes Secrets, sync delays possible. |
-| ArgoCD Vault Plugin            | Fetches secrets during manifest rendering.   | Tight GitOps integration, supports encrypted secrets. | Adds complexity to the pipeline setup.            |
+| **Tool**                           | **Description**                           | **Advantages**                                   | **Disadvantages**                                  |
+|------------------------------------|-------------------------------------------|--------------------------------------------------|----------------------------------------------------|
+| **HashiCorp Vault API**            | Direct integration with applications      | Dynamic secrets, centralized management          | Needs integration in application code, dependency on Vault availability. |
+| **Vault Agent Injector**           | Injects secrets into pods via a sidecar   | Secrets not stored in Kubernetes Secrets.  | Requires sidecar for each pod. Only works for pods.      |
+| **Secrets Store CSI Driver**       | Mounts secrets as volumes in pods         | Simplifies secret consumption, works across multiple backends | Secrets not dynamically refreshed, requires additional driver. Only works for pods. |
+| **Vault Secrets Operator** (VSO)   | Syncs Vault secrets to Kubernetes Secrets | Kubernetes-native integration, automates secret updates | Secrets stored in Kubernetes Secrets. |
+| **External Secrets Operator** (ESO)| Syncs secrets from external providers     | Multi-provider support, GitOps-friendly          | Secrets persisted in Kubernetes Secrets, sync delays possible. |
+| **ArgoCD Vault Plugin**            | Fetches secrets during manifest rendering | Tight GitOps integration, supports encrypted secrets | Adds complexity to the pipeline setup. Not supported       |
 
 
 
@@ -191,11 +188,17 @@ oc apply -f application-vault-secrets-operator.yaml
 
 
 
+
+
+
+
 ## 7. Vault Agent Injector
 
 The [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector) alters pod specifications to include Vault Agent containers that render Vault secrets to a shared memory volume using Vault Agent Templates. By rendering secrets to a shared volume, containers within the pod can consume Vault secrets without being Vault aware.
 
 The injector is a Kubernetes Mutation Webhook Controller. The controller intercepts pod events and applies mutations to the pod if annotations exist within the request. This functionality is provided by the vault-k8s project and can be automatically installed and configured using the Vault Helm chart.
+
+
 
 
 
@@ -221,6 +224,8 @@ oc apply -f application-external-secrets-operator.yaml
 * https://external-secrets.io/latest/
 * https://github.com/external-secrets/external-secrets-helm-operator
 * https://www.redhat.com/en/blog/external-secrets-with-hashicorp-vault
+
+
 
 
 
