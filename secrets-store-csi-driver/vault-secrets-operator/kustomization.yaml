@@ -1,0 +1,10 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - og-openshift-cluster-csi-drivers.yaml
+  - sub-secrets-store-csi-driver-operator.yaml
+
+  # Create the ClusterCSIDriver instance for the driver 
+  - clustercsidriver-secrets-store.yaml
