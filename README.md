@@ -10,10 +10,12 @@ This repository explores some of the integrations with credentials and certifica
     - [2.3. Useful Links](#23-useful-links)
   - [3. Hashicorp Vault](#3-hashicorp-vault)
     - [3.1. Installation and access](#31-installation-and-access)
-    - [3.2. Useful Links](#32-useful-links)
+    - [3.2. Initializing Vault Secrets](#32-initializing-vault-secrets)
+    - [3.3. Useful Links](#33-useful-links)
   - [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
   - [5. Secrets Store CSI Driver](#5-secrets-store-csi-driver)
     - [5.1. Installation and configuration](#51-installation-and-configuration)
+    - [5.2. Useful Links](#52-useful-links)
   - [6. Vault Secrets Operator (VSO)](#6-vault-secrets-operator-vso)
     - [6.1. Installation and configuration](#61-installation-and-configuration)
   - [7. Vault Agent Injector](#7-vault-agent-injector)
@@ -114,11 +116,24 @@ oc apply -f application-hashicorp-vault.yaml
 In order to access the deployed Vault server, just retrieve the route using the following command and access the UI using the token `root`:
 
 ```bash
-oc get route hashicorp-vault -n hashicorp-vault --template="https://{{.spec.host}}"
+oc get route hashicorp-vault -n vault --template="https://{{.spec.host}}"
 ```
 
 
-### 3.2. Useful Links
+### 3.2. Initializing Vault Secrets
+
+As the `dev` Vault instance is an in-memory instance, just by deleting the `vault-0` pod, you will loose all the data stored in the Vault. For that reason, I have created a script to quickly set up the Secret store with some dummy data to consume from the applications. The only thing that you need is log in to the cluster and execute the following script:
+
+```bash
+./create_vault_secrets.sh
+```
+
+Now, you can access the Hashicorp Vault, to the `secret/` Engine and you will see the `demo1`, `demo2`, and `demo3` entries.
+
+
+
+
+### 3.3. Useful Links
 
 * Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the Hashicorp Vault Helm repo.
 * Blog: [In-Depth Hashicorp Vault setup on OpenShift using OpenShift GitOps](https://stephennimmo.com/2024/05/05/hashicorp-vault-setup-on-openshift-using-argocd): This is a must read. It is an updated blog on how to customize the Hashicorp Vault deployment.
@@ -149,24 +164,42 @@ Here are some common methods for using secrets from HashiCorp Vault in OpenShift
 | **Secrets Store CSI Driver**       | Mounts secrets as volumes in pods         | Simplifies secret consumption, works across multiple backends | Secrets not dynamically refreshed, requires additional driver. Only works for pods. |
 | **Vault Secrets Operator** (VSO)   | Syncs Vault secrets to Kubernetes Secrets | Kubernetes-native integration, automates secret updates | Secrets stored in Kubernetes Secrets. |
 | **External Secrets Operator** (ESO)| Syncs secrets from external providers     | Multi-provider support, GitOps-friendly          | Secrets persisted in Kubernetes Secrets, sync delays possible. |
-| **ArgoCD Vault Plugin**            | Fetches secrets during manifest rendering | Tight GitOps integration, supports encrypted secrets | Adds complexity to the pipeline setup. Not supported       |
+| **ArgoCD Vault Plugin**            | Fetches secrets during manifest rendering | Tight GitOps integration, supports encrypted secrets | Adds complexity to the pipeline setup. Plugins are not in RH support.       |
 
 
-
-
+> [!TIP]
+> The first method just implies using app framework libraries or pre-exec scripts to retrieve the Secrets from the Hashicorp Vault manually and add them to the application. For that reason, we are not going to explore that possibility.
 
 
 
 
 ## 5. Secrets Store CSI Driver
 
-The [Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction) `secrets-store.csi.k8s.io` allows Kubernetes to mount multiple secrets, keys, and certs stored in enterprise-grade external secrets stores into their pods as a volume. Once the Volume is attached, the data in it is mounted into the container’s file system.
+> [!CAUTION] Tech Preview
+The Secrets Store CSI Driver operator is **Tech Preview** in OpenShift 4.17.
 
+The [Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction) `secrets-store.csi.k8s.io` allows Kubernetes to mount multiple secrets, keys, and certs stored in enterprise-grade external secrets stores into their pods as a volume. Once the Volume is attached, the data in it is mounted into the container’s file system. 
+
+The following secrets store providers are available for use with the Secrets Store CSI Driver Operator:
+
+* AWS Secrets Manager.
+* AWS Systems Manager Parameter Store.
+* Azure Key Vault.
+* Google Secret Manager.
+* HashiCorp Vault.
 
 
 ### 5.1. Installation and configuration
 
 
+```bash
+oc apply -f application-secrets-store-csi-driver.yaml
+```
+
+### 5.2. Useful Links
+
+* Docs: [OpenShift - Installing Secrets CSI](https://docs.openshift.com/container-platform/4.17/storage/container_storage_interface/persistent-storage-csi-secrets-store.html).
+* Docs: [OpenShift - Providing sensitive data to pods by using an external secrets store](https://docs.openshift.com/container-platform/4.17/nodes/pods/nodes-pods-secrets-store.html#mounting-secrets-external-secrets-store).
 
 
 
