@@ -22,7 +22,7 @@ spec:
       command:
         - "/bin/bash"
         - "-c"
-        - "while true; do cat /vault/secrets/; sleep 10; done"
+        - "while true; do cat /vault/secrets/*; sleep 10; done"
       securityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
