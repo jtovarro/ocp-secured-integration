@@ -13,12 +13,12 @@ This repository explores some of the integrations with credentials and certifica
     - [3.2. Initializing Vault Secrets](#32-initializing-vault-secrets)
     - [3.3. Useful Links](#33-useful-links)
   - [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
-  - [5. Secrets Store CSI Driver](#5-secrets-store-csi-driver)
-    - [5.1. Installation and configuration](#51-installation-and-configuration)
-    - [5.2. Useful Links](#52-useful-links)
-  - [6. Vault Secrets Operator (VSO)](#6-vault-secrets-operator-vso)
+  - [5. Vault Sidecar Agent Injector](#5-vault-sidecar-agent-injector)
+  - [6. Secrets Store CSI Driver](#6-secrets-store-csi-driver)
     - [6.1. Installation and configuration](#61-installation-and-configuration)
-  - [7. Vault Agent Injector](#7-vault-agent-injector)
+    - [6.2. Useful Links](#62-useful-links)
+  - [7. Vault Secrets Operator (VSO)](#7-vault-secrets-operator-vso)
+    - [7.1. Installation and configuration](#71-installation-and-configuration)
   - [8. External Secrets Operator (ESO)](#8-external-secrets-operator-eso)
     - [8.1. Installation and configuration](#81-installation-and-configuration)
     - [8.2. Useful Links](#82-useful-links)
@@ -110,13 +110,13 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 To install Hashicorp Vault on OpenShift, the recommended mechanism is to deploy it with the Helm Chart. For that reason, I've created the following application with the simplest configuration to deploy on OpenShift and automatically create a Route in `dev` mode:
 
 ```bash
-oc apply -f application-hashicorp-vault.yaml
+oc apply -f application-03-hashicorp-vault-server.yaml
 ```
 
 In order to access the deployed Vault server, just retrieve the route using the following command and access the UI using the token `root`:
 
 ```bash
-oc get route hashicorp-vault -n vault --template="https://{{.spec.host}}"
+oc get route hashicorp-vault-server -n vault --template="https://{{.spec.host}}"
 ```
 
 
@@ -160,7 +160,7 @@ Here are some common methods for using secrets from HashiCorp Vault in OpenShift
 | **Tool**                           | **Description**                           | **Advantages**                                   | **Disadvantages**                                  |
 |------------------------------------|-------------------------------------------|--------------------------------------------------|----------------------------------------------------|
 | **HashiCorp Vault API**            | Direct integration with applications      | Dynamic secrets, centralized management          | Needs integration in application code, dependency on Vault availability. |
-| **Vault Agent Injector**           | Injects secrets into pods via a sidecar   | Secrets not stored in Kubernetes Secrets.  | Requires sidecar for each pod. Only works for pods.      |
+| **Vault Sidecar Agent Injector**           | Injects secrets into pods via a sidecar   | Secrets not stored in Kubernetes Secrets.  | Requires sidecar for each pod. Only works for pods.      |
 | **Secrets Store CSI Driver**       | Mounts secrets as volumes in pods         | Simplifies secret consumption, works across multiple backends | Secrets not dynamically refreshed, requires additional driver. Only works for pods. |
 | **Vault Secrets Operator** (VSO)   | Syncs Vault secrets to Kubernetes Secrets | Kubernetes-native integration, automates secret updates | Secrets stored in Kubernetes Secrets. |
 | **External Secrets Operator** (ESO)| Syncs secrets from external providers     | Multi-provider support, GitOps-friendly          | Secrets persisted in Kubernetes Secrets, sync delays possible. |
@@ -173,7 +173,48 @@ Here are some common methods for using secrets from HashiCorp Vault in OpenShift
 
 
 
-## 5. Secrets Store CSI Driver
+
+## 5. Vault Sidecar Agent Injector
+
+The [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector) alters pod specifications to include Vault Agent containers that render Vault secrets to a shared memory volume using Vault Agent Templates. By rendering secrets to a shared volume, containers within the pod can consume Vault secrets without being Vault aware.
+
+The injector is a Kubernetes Mutation Webhook Controller. The controller intercepts pod events and applies mutations to the pod if annotations exist within the request. This functionality is provided by the vault-k8s project and can be automatically installed and configured using the Vault Helm chart.
+
+
+```bash
+oc apply -f application-05-vault-sidecar-agent-injector.yaml
+```
+
+> [!WARNING]
+> If this application is not rendered correctly in your ArgoCD, consider adding the [following flag](https://github.com/alvarolop/ocp-gitops-playground/blob/main/openshift/02-argocd.yaml#L70) to your kustomize configuration: `--enable-helm`.
+
+
+Pros:
+  * Easy configuration based on several annotations.
+  * Authentication based on ServiceAccount Tokens.
+Cons:
+  * Need to modify applications deployment configuration.
+  * Only allows to inject secrets in containers, not for OpenShift configuration.
+  * Only allows to inject secrets as files, not as environment variables.
+Other considerations:
+  * Installation doesn't need an operator.
+
+⚖️ Pros and Cons of Vault Sidecar Agent Injector
+
+✅ Pros
+* 🔧 Easy configuration based on several annotations.
+* 🔑 Authentication based on ServiceAccount Tokens.
+
+❌ Cons
+* 🛠️ Requires modifying application deployment configurations.
+* 🔒 Secrets can only be injected into containers, not OpenShift configuration.
+* 📂 Secrets can only be injected as files, not environment variables.
+
+💡 Other Considerations
+* 🚀 Installation does not require an operator.
+
+
+## 6. Secrets Store CSI Driver
 
 > [!CAUTION] Tech Preview
 The Secrets Store CSI Driver operator is **Tech Preview** in OpenShift 4.17.
@@ -189,14 +230,14 @@ The following secrets store providers are available for use with the Secrets Sto
 * HashiCorp Vault.
 
 
-### 5.1. Installation and configuration
+### 6.1. Installation and configuration
 
 
 ```bash
 oc apply -f application-secrets-store-csi-driver.yaml
 ```
 
-### 5.2. Useful Links
+### 6.2. Useful Links
 
 * Docs: [OpenShift - Installing Secrets CSI](https://docs.openshift.com/container-platform/4.17/storage/container_storage_interface/persistent-storage-csi-secrets-store.html).
 * Docs: [OpenShift - Providing sensitive data to pods by using an external secrets store](https://docs.openshift.com/container-platform/4.17/nodes/pods/nodes-pods-secrets-store.html#mounting-secrets-external-secrets-store).
@@ -206,12 +247,16 @@ oc apply -f application-secrets-store-csi-driver.yaml
 
 
 
-## 6. Vault Secrets Operator (VSO)
+
+
+
+
+## 7. Vault Secrets Operator (VSO)
 
 [The Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso/openshift) allows Pods to consume Vault secrets and HCP Vault Secrets Apps natively from Kubernetes Secrets. The Operator writes the source Vault secret data directly to the destination Kubernetes Secret, ensuring that any changes made to the source are replicated to the destination over its lifetime.
 
 
-### 6.1. Installation and configuration
+### 7.1. Installation and configuration
 
 
 ```bash
@@ -225,11 +270,7 @@ oc apply -f application-vault-secrets-operator.yaml
 
 
 
-## 7. Vault Agent Injector
 
-The [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector) alters pod specifications to include Vault Agent containers that render Vault secrets to a shared memory volume using Vault Agent Templates. By rendering secrets to a shared volume, containers within the pod can consume Vault secrets without being Vault aware.
-
-The injector is a Kubernetes Mutation Webhook Controller. The controller intercepts pod events and applies mutations to the pod if annotations exist within the request. This functionality is provided by the vault-k8s project and can be automatically installed and configured using the Vault Helm chart.
 
 
 
@@ -257,6 +298,8 @@ oc apply -f application-external-secrets-operator.yaml
 * https://external-secrets.io/latest/
 * https://github.com/external-secrets/external-secrets-helm-operator
 * https://www.redhat.com/en/blog/external-secrets-with-hashicorp-vault
+
+
 
 
 
