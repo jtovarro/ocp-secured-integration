@@ -3,8 +3,8 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   labels:
-    app: hashicorp-vault
-  name: hashicorp-vault
+    app: vault-sidecar-agent-injector
+  name: vault-sidecar-agent-injector
   namespace: gitops
 spec:
   destination:
