@@ -14,6 +14,7 @@ This repository explores some of the integrations with credentials and certifica
     - [3.3. Useful Links](#33-useful-links)
   - [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
   - [5. Vault Sidecar Agent Injector](#5-vault-sidecar-agent-injector)
+    - [⚖️ Pros and Cons of Vault Sidecar Agent Injector](#️-pros-and-cons-of-vault-sidecar-agent-injector)
   - [6. Secrets Store CSI Driver](#6-secrets-store-csi-driver)
     - [6.1. Installation and configuration](#61-installation-and-configuration)
     - [6.2. Useful Links](#62-useful-links)
@@ -189,29 +190,23 @@ oc apply -f application-05-vault-sidecar-agent-injector.yaml
 > If this application is not rendered correctly in your ArgoCD, consider adding the [following flag](https://github.com/alvarolop/ocp-gitops-playground/blob/main/openshift/02-argocd.yaml#L70) to your kustomize configuration: `--enable-helm`.
 
 
-Pros:
-  * Easy configuration based on several annotations.
-  * Authentication based on ServiceAccount Tokens.
-Cons:
-  * Need to modify applications deployment configuration.
-  * Only allows to inject secrets in containers, not for OpenShift configuration.
-  * Only allows to inject secrets as files, not as environment variables.
-Other considerations:
-  * Installation doesn't need an operator.
 
-⚖️ Pros and Cons of Vault Sidecar Agent Injector
+### ⚖️ Pros and Cons of Vault Sidecar Agent Injector
 
-✅ Pros
+#### ✅ Pros
 * 🔧 Easy configuration based on several annotations.
 * 🔑 Authentication based on ServiceAccount Tokens.
 
-❌ Cons
+#### ❌ Cons
 * 🛠️ Requires modifying application deployment configurations.
 * 🔒 Secrets can only be injected into containers, not OpenShift configuration.
 * 📂 Secrets can only be injected as files, not environment variables.
 
-💡 Other Considerations
+#### 💡 Other Considerations
 * 🚀 Installation does not require an operator.
+
+
+
 
 
 ## 6. Secrets Store CSI Driver
