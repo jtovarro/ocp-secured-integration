@@ -3,13 +3,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   labels:
-    app: hashicorp-vault
-  name: hashicorp-vault
+    app: hashicorp-vault-server
+  name: hashicorp-vault-server
   namespace: gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: hashicorp-vault
+    namespace: vault
   project: default
   source:
     repoURL: https://helm.releases.hashicorp.com
@@ -18,6 +18,8 @@ spec:
       values: |
         global:
           openshift: true
+        injector:
+          enabled: false
         server:
           dev:
             enabled: true

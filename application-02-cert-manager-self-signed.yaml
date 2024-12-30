@@ -3,15 +3,15 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   labels:
-    app: vault-secrets-operator
-  name: vault-secrets-operator
+    app: cert-manager-self-signed
+  name: cert-manager-self-signed
   namespace: gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
   project: default
   source:
-    path: vault-secrets-operator
+    path: 02-cert-manager-self-signed
     repoURL: https://github.com/alvarolop/ocp-secured-integration.git
     targetRevision: main
   syncPolicy:

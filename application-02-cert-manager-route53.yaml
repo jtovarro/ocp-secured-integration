@@ -3,17 +3,21 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   labels:
-    app: cert-manager-self-signed
-  name: cert-manager-self-signed
+    app: cert-manager-route53
+  name: cert-manager-route53
   namespace: gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
   project: default
   source:
-    path: cert-manager-self-signed
+    path: 02-cert-manager-route53
     repoURL: https://github.com/alvarolop/ocp-secured-integration.git
     targetRevision: main
+    helm:
+      parameters:
+        - name: clusterDomain
+          value: $CLUSTER_DOMAIN
   syncPolicy:
     automated:
       prune: false
