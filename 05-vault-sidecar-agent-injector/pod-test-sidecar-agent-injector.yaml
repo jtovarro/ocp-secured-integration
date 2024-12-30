@@ -5,6 +5,7 @@ metadata:
   name: test-sidecar-agent-injector
   namespace: test-secrets
   annotations:
+    argocd.argoproj.io/sync-options: Replace=true
     # https://developer.hashicorp.com/vault/docs/platform/k8s/injector/annotations
     vault.hashicorp.com/agent-inject: 'true'
     vault.hashicorp.com/agent-inject-secret-foo.txt: '/secret/data/demo1'
