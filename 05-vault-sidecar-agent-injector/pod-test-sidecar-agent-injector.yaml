@@ -14,9 +14,6 @@ metadata:
     # Vault address to use (if different from the default configuration)
     vault.hashicorp.com/service: "http://hashicorp-vault-server.vault.svc.cluster.local:8200"
 spec:
-  securityContext:
-    seccompProfile:
-      type: RuntimeDefault
   containers:
     - name: test
       image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
