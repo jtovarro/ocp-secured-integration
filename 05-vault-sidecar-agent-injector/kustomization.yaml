@@ -10,4 +10,4 @@ helmCharts:
   releaseName: vault
 
 resources:
-  - pod-test-sidecar-agent-injector.yaml
+  - deployment-test-sidecar-agent-injector.yaml

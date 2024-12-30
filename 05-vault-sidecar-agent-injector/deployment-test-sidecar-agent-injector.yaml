@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-sidecar-agent-injector
+  namespace: test-secrets
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-sidecar-agent-injector
+  template:
+    metadata:
+      labels:
+        app: test-sidecar-agent-injector
+      annotations:
+        # https://developer.hashicorp.com/vault/docs/platform/k8s/injector/annotations
+        vault.hashicorp.com/agent-inject: 'true'
+        vault.hashicorp.com/agent-inject-secret-foo.txt: '/secret/data/demo1'
+        vault.hashicorp.com/agent-inject-secret-bar.txt: '/secret/data/demo2'
+        vault.hashicorp.com/role: 'webapp'
+        # Vault address to use (if different from the default configuration)
+        vault.hashicorp.com/service: "http://hashicorp-vault-server.vault.svc.cluster.local:8200"
+    spec:
+      containers:
+        - name: test
+          image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "while true; do cat /vault/secrets/*; sleep 10; done"
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
