@@ -1,0 +1,13 @@
+global:
+  openshift: true
+  enabled: false
+  namespace: vault
+csi:
+  enabled: true
+  image:
+    repository: docker.io/hashicorp/vault-csi-provider
+  agent:
+    image:
+      repository: docker.io/hashicorp/vault
+  daemonSet:
+    providersDir: /var/run/secrets-store-csi-providers

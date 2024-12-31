@@ -1,10 +1,39 @@
----
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - og-openshift-cluster-csi-drivers.yaml
-  - sub-secrets-store-csi-driver-operator.yaml
+# Create the ClusterCSIDriver instance for the driver 
+- og-openshift-cluster-csi-drivers.yaml
+- sub-secrets-store-csi-driver-operator.yaml
+- clustercsidriver-secrets-store.yaml
 
-  # Create the ClusterCSIDriver instance for the driver 
-  - clustercsidriver-secrets-store.yaml
+# Provide privileged permissions to the SAs
+- ns-vault.yaml
+- rolebinding-vault-privileged-binding.yaml
+- rolebinding-vault-csi-provider-privileged-binding.yaml
+
+# Test the implementation with mounted secret
+- secretproviderclass-my-vault-provider.yaml
+- deployment-test-secrets-store-csi-driver.yaml
+
+# Test the implementation with secret from env var
+- secretproviderclass-vault-to-secret.yaml
+- deployment-test-secrets-store-csi-driver-from-secret.yaml
+
+# Deploy HashiCorp Vault CSI driver
+helmCharts:
+- name: vault
+  releaseName: vault
+  repo: https://helm.releases.hashicorp.com
+  valuesFile: values.yaml
+  version: 0.29.1
+
+# Patch the vault-csi-driver daemon set to set the securityContext to privileged
+patches:
+- path: patch-vault-csi-provider-privileged.json
+  target:
+    group: apps
+    kind: DaemonSet
+    name: vault-csi-provider
+    namespace: vault
+    version: v1
