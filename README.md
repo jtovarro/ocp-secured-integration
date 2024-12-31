@@ -244,13 +244,15 @@ The following secrets store providers are available for use with the Secrets Sto
 * HashiCorp Vault.
 
 
-
 ### 6.1. Installation and configuration
 
 
 ```bash
 oc apply -f application-06-secrets-store-csi-driver.yaml
 ```
+
+or deploy it locally with the following command `kustomize build 06-secrets-store-csi-driver/ --enable-helm | oc apply -f -`.
+
 
 ### 6.2. Useful Links
 
@@ -263,19 +265,18 @@ oc apply -f application-06-secrets-store-csi-driver.yaml
 ### 6.3. ⚖️ Pros and Cons of the Secrets Store CSI Driver
 
 #### ✅ Pros
-* 🔧 Easy configuration based on several annotations.
 * 🔑 Authentication based on ServiceAccount Tokens.
+* 📂 Secrets can be injected as files and environment variables as well.
 
 #### ❌ Cons
-* 🛠️ Requires modifying application deployment configurations.
+* 🔧 More complex configuration. Requires Operator, and several k8s resources.
+* 🛠️ Requires specific application deployment configuration related to the CSI Driver.
 * 🔒 Secrets can only be injected into containers, not OpenShift configuration.
-* 📂 Secrets can only be injected as files, not environment variables.
-* ❌ Not supported by Red Hat.
-
-#### 💡 Other Considerations
-* 🚀 Installation does not require an operator.
 * 📲 The Secrets Store CSI Driver operator is **Tech Preview** in OpenShift 4.17.
 
+#### 💡 Other Considerations
+* If you try to get the k8s secret, you'll see that it doesn't exist until it is requested by a pod.
+* If you plan to consume your secret data as Kubernetes Secrets only, then **other solutions like External Secrets Operator may be a better fit**.
 
 
 
