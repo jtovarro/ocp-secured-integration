@@ -14,12 +14,17 @@ This repository explores some of the integrations with credentials and certifica
     - [3.3. Useful Links](#33-useful-links)
   - [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
   - [5. Vault Sidecar Agent Injector](#5-vault-sidecar-agent-injector)
-    - [⚖️ Pros and Cons of Vault Sidecar Agent Injector](#️-pros-and-cons-of-vault-sidecar-agent-injector)
-  - [6. Secrets Store CSI Driver](#6-secrets-store-csi-driver)
     - [6.1. Installation and configuration](#61-installation-and-configuration)
     - [6.2. Useful Links](#62-useful-links)
+    - [6.3. ⚖️ Pros and Cons of Vault Sidecar Agent Injector](#63-️-pros-and-cons-of-vault-sidecar-agent-injector)
+  - [6. Secrets Store CSI Driver](#6-secrets-store-csi-driver)
+    - [6.1. Installation and configuration](#61-installation-and-configuration-1)
+    - [6.2. Useful Links](#62-useful-links-1)
+    - [6.3. ⚖️ Pros and Cons of the Secrets Store CSI Driver](#63-️-pros-and-cons-of-the-secrets-store-csi-driver)
   - [7. Vault Secrets Operator (VSO)](#7-vault-secrets-operator-vso)
     - [7.1. Installation and configuration](#71-installation-and-configuration)
+    - [7.2. Useful Links](#72-useful-links)
+    - [7.3. ⚖️ Pros and Cons of the Vault Secrets Operator](#73-️-pros-and-cons-of-the-vault-secrets-operator)
   - [8. External Secrets Operator (ESO)](#8-external-secrets-operator-eso)
     - [8.1. Installation and configuration](#81-installation-and-configuration)
     - [8.2. Useful Links](#82-useful-links)
@@ -182,6 +187,9 @@ The [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k
 The injector is a Kubernetes Mutation Webhook Controller. The controller intercepts pod events and applies mutations to the pod if annotations exist within the request. This functionality is provided by the vault-k8s project and can be automatically installed and configured using the Vault Helm chart.
 
 
+### 6.1. Installation and configuration
+
+
 ```bash
 oc apply -f application-05-vault-sidecar-agent-injector.yaml
 ```
@@ -189,9 +197,16 @@ oc apply -f application-05-vault-sidecar-agent-injector.yaml
 > [!WARNING]
 > If this application is not rendered correctly in your ArgoCD, consider adding the [following flag](https://github.com/alvarolop/ocp-gitops-playground/blob/main/openshift/02-argocd.yaml#L70) to your kustomize configuration: `--enable-helm`.
 
+or deploy it locally with the following command `kustomize build 05-vault-sidecar-agent-injector/ --enable-helm | oc apply -f -`.
+
+### 6.2. Useful Links
+
+* Docs: [Hashicorp - Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector).
+* Tutorial: [Hashicorp - Mange secrets by injecting a Vault Agent container](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-sidecar).
 
 
-### ⚖️ Pros and Cons of Vault Sidecar Agent Injector
+
+### 6.3. ⚖️ Pros and Cons of Vault Sidecar Agent Injector
 
 #### ✅ Pros
 * 🔧 Easy configuration based on several annotations.
@@ -201,6 +216,8 @@ oc apply -f application-05-vault-sidecar-agent-injector.yaml
 * 🛠️ Requires modifying application deployment configurations.
 * 🔒 Secrets can only be injected into containers, not OpenShift configuration.
 * 📂 Secrets can only be injected as files, not environment variables.
+* ❌ Not supported by Red Hat.
+* ⚡ High resources consumption as each pod with secret needs a permanent sidecar container.
 
 #### 💡 Other Considerations
 * 🚀 Installation does not require an operator.
@@ -209,10 +226,12 @@ oc apply -f application-05-vault-sidecar-agent-injector.yaml
 
 
 
-## 6. Secrets Store CSI Driver
 
-> [!CAUTION] Tech Preview
-The Secrets Store CSI Driver operator is **Tech Preview** in OpenShift 4.17.
+
+
+
+
+## 6. Secrets Store CSI Driver
 
 The [Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction) `secrets-store.csi.k8s.io` allows Kubernetes to mount multiple secrets, keys, and certs stored in enterprise-grade external secrets stores into their pods as a volume. Once the Volume is attached, the data in it is mounted into the container’s file system. 
 
@@ -225,21 +244,37 @@ The following secrets store providers are available for use with the Secrets Sto
 * HashiCorp Vault.
 
 
+
 ### 6.1. Installation and configuration
 
 
 ```bash
-oc apply -f application-secrets-store-csi-driver.yaml
+oc apply -f application-06-secrets-store-csi-driver.yaml
 ```
 
 ### 6.2. Useful Links
 
 * Docs: [OpenShift - Installing Secrets CSI](https://docs.openshift.com/container-platform/4.17/storage/container_storage_interface/persistent-storage-csi-secrets-store.html).
 * Docs: [OpenShift - Providing sensitive data to pods by using an external secrets store](https://docs.openshift.com/container-platform/4.17/nodes/pods/nodes-pods-secrets-store.html#mounting-secrets-external-secrets-store).
+* Docs: [Kubernetes Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction).
 
 
 
+### 6.3. ⚖️ Pros and Cons of the Secrets Store CSI Driver
 
+#### ✅ Pros
+* 🔧 Easy configuration based on several annotations.
+* 🔑 Authentication based on ServiceAccount Tokens.
+
+#### ❌ Cons
+* 🛠️ Requires modifying application deployment configurations.
+* 🔒 Secrets can only be injected into containers, not OpenShift configuration.
+* 📂 Secrets can only be injected as files, not environment variables.
+* ❌ Not supported by Red Hat.
+
+#### 💡 Other Considerations
+* 🚀 Installation does not require an operator.
+* 📲 The Secrets Store CSI Driver operator is **Tech Preview** in OpenShift 4.17.
 
 
 
@@ -259,9 +294,20 @@ oc apply -f application-vault-secrets-operator.yaml
 ```
 
 
+### 7.2. Useful Links
+
+* Blog: [Vault Secrets Operator for Kubernetes now GA](https://www.hashicorp.com/blog/vault-secrets-operator-for-kubernetes-now-ga).
 
 
+### 7.3. ⚖️ Pros and Cons of the Vault Secrets Operator
 
+#### ✅ Pros
+
+
+#### ❌ Cons
+
+
+#### 💡 Other Considerations
 
 
 
