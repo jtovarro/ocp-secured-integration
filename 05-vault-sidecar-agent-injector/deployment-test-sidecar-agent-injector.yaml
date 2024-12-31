@@ -35,3 +35,4 @@ spec:
             capabilities:
               drop:
                 - ALL
+      terminationGracePeriodSeconds: 0
