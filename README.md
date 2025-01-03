@@ -259,7 +259,7 @@ or deploy it locally with the following command `kustomize build 06-secrets-stor
 * Docs: [OpenShift - Installing Secrets CSI](https://docs.openshift.com/container-platform/4.17/storage/container_storage_interface/persistent-storage-csi-secrets-store.html).
 * Docs: [OpenShift - Providing sensitive data to pods by using an external secrets store](https://docs.openshift.com/container-platform/4.17/nodes/pods/nodes-pods-secrets-store.html#mounting-secrets-external-secrets-store).
 * Docs: [Kubernetes Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction).
-
+* Blog: [OpenShift Secrets Store CSI Driver with Vault](https://www.redhat.com/en/blog/openshift-secrets-store-csi-driver-vault).
 
 
 ### 6.3. ⚖️ Pros and Cons of the Secrets Store CSI Driver
@@ -282,6 +282,8 @@ or deploy it locally with the following command `kustomize build 06-secrets-stor
 
 
 
+
+
 ## 7. Vault Secrets Operator (VSO)
 
 [The Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso/openshift) allows Pods to consume Vault secrets and HCP Vault Secrets Apps natively from Kubernetes Secrets. The Operator writes the source Vault secret data directly to the destination Kubernetes Secret, ensuring that any changes made to the source are replicated to the destination over its lifetime.
@@ -289,26 +291,29 @@ or deploy it locally with the following command `kustomize build 06-secrets-stor
 
 ### 7.1. Installation and configuration
 
-
 ```bash
-oc apply -f application-vault-secrets-operator.yaml
+oc apply -f application-07-vault-secrets-operator.yaml
 ```
 
 
 ### 7.2. Useful Links
 
 * Blog: [Vault Secrets Operator for Kubernetes now GA](https://www.hashicorp.com/blog/vault-secrets-operator-for-kubernetes-now-ga).
+* Git: [learn-vault-secrets-operator](https://github.com/hashicorp-education/learn-vault-secrets-operator/tree/main)
+* Tutorial: [Manage Kubernetes native secrets with the Vault Secrets Operator](https://developer.hashicorp.com/vault/tutorials/kubernetes/vault-secrets-operator).
 
 
 ### 7.3. ⚖️ Pros and Cons of the Vault Secrets Operator
 
 #### ✅ Pros
-
+* The VSO operator is a certified operator by Hashicorp.
+* Integration with Vault Dynamic Secrets.
+* It allows to create secrets without a pod using it, so can be used for OpenShift configuration.
+* Simplified configuration compared to the previous methods.
 
 #### ❌ Cons
-
-
-#### 💡 Other Considerations
+* Documentation is poor and specially when VSO is installed using OLM.
+* It looks like having smaller penetration in the market compared to other alternatives.
 
 
 
@@ -331,7 +336,7 @@ oc apply -f application-vault-secrets-operator.yaml
 External-secrets can be managed by Operator Lifecycle Manager (OLM) via an installer operator. This is the best alternative for OpenShift. This operator can be installed using the following ArgoCD application:
 
 ```bash
-oc apply -f application-external-secrets-operator.yaml
+oc apply -f application-08-external-secrets-operator.yaml
 ```
 
 ### 8.2. Useful Links
@@ -354,3 +359,8 @@ oc apply -f application-external-secrets-operator.yaml
 
 
 * argocd-vault-plugin: https://github.com/argoproj-labs/argocd-vault-plugin
+
+
+
+
+NOTE: Añadir cómo cifrar el etcd y alternativas de configuración al respecto?

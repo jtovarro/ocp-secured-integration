@@ -1,0 +1,8 @@
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: default
+  namespace: test-secrets
+spec:
+  address: http://hashicorp-vault-server.vault.svc.cluster.local:8200

@@ -4,3 +4,11 @@ kind: Kustomization
 
 resources:
   - sub-vault-secrets-operator.yaml
+
+  - vaultauth-static-auth.yaml
+  - sa-static-auth.yaml
+  - vaultconnection-default.yaml
+
+  - vaultstaticsecret-vso-static.yaml
+
+  # - vaultdynamicsecret-vso-dynamic.yaml
