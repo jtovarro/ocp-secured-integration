@@ -435,23 +435,22 @@ helm template 02-cert-manager-route53 --set clusterDomain=$(oc get dns.config/cl
 Great! We configured that flag on the APIServer resource, but I really need to make sure that encryption is enabled on the node. That's fine! Use the following commands to check the encryption configuration for each component:
 
 1) Review the `Encrypted` status condition for the **OpenShift API** server to verify that its resources were successfully encrypted:
-+
+
 ```bash
 oc get openshiftapiserver -o=jsonpath='{range .items[0].status.conditions[?(@.type=="Encrypted")]}{.reason}{"\n"}{.message}{"\n"}'
 EncryptionCompleted
 All resources encrypted: routes.route.openshift.io
 ```
-+
 2) Review the `Encrypted` status condition for the **Kubernetes API** server to verify that its resources were successfully encrypted:
-+
+
 ```bash
 $ oc get kubeapiserver -o=jsonpath='{range .items[0].status.conditions[?(@.type=="Encrypted")]}{.reason}{"\n"}{.message}{"\n"}'
 EncryptionCompleted
 All resources encrypted: secrets, configmaps
 ```
-+
+
 3) Review the `Encrypted` status condition for the **OpenShift OAuth API** server to verify that its resources were successfully encrypted:
-+
+
 ```bash
 $ oc get authentication.operator.openshift.io -o=jsonpath='{range .items[0].status.conditions[?(@.type=="Encrypted")]}{.reason}{"\n"}{.message}{"\n"}'
 EncryptionCompleted
