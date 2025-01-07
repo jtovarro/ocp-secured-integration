@@ -8,7 +8,7 @@ This repository explores some of the integrations with credentials and certifica
     - [2.1. Installation and configuration](#21-installation-and-configuration)
     - [2.2. Debugging cert-manager](#22-debugging-cert-manager)
     - [2.3. Useful Links](#23-useful-links)
-  - [3. Hashicorp Vault](#3-hashicorp-vault)
+  - [3. HashiCorp Vault](#3-hashicorp-vault)
     - [3.1. Installation and access](#31-installation-and-access)
     - [3.2. Initializing Vault Secrets](#32-initializing-vault-secrets)
     - [3.3. Useful Links](#33-useful-links)
@@ -28,7 +28,12 @@ This repository explores some of the integrations with credentials and certifica
   - [8. External Secrets Operator (ESO)](#8-external-secrets-operator-eso)
     - [8.1. Installation and configuration](#81-installation-and-configuration)
     - [8.2. Useful Links](#82-useful-links)
+    - [8.3. ⚖️ Pros and Cons of the External Secrets Operator](#83-️-pros-and-cons-of-the-external-secrets-operator)
   - [9. ArgoCD Vault Plugin](#9-argocd-vault-plugin)
+    - [9.1. Useful Links](#91-useful-links)
+    - [9.1. ⚖️ Pros and Cons of the ArgoCD Vault Plugin](#91-️-pros-and-cons-of-the-argocd-vault-plugin)
+  - [Extra: Encrypting etcd data](#extra-encrypting-etcd-data)
+    - [Testing encryption configuration](#testing-encryption-configuration)
 
 
 ## 1. Introduction
@@ -52,14 +57,14 @@ Do you want to deploy it in your cluster **without ArgoCD**? You can copy the fo
 
 ```bash
 # 1) Deploy the operator
-oc apply -k cert-manager-operator
+oc apply -k 02-cert-manager-operator
 # 2) Wait for the operator to be ready
 echo -n "Waiting for cert-manager pods to be ready..."
 while [[ $(oc get pods -l app.kubernetes.io/instance=cert-manager -n cert-manager -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True True True" ]]; do echo -n "." && sleep 1; done; echo -n -e "  [OK]\n"
 # 3) Configure the OpenShift certificates for Ingress and API
-helm template cert-manager-route53 --set clusterDomain=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}')  | oc apply -f -
+helm template 02-cert-manager-route53 --set clusterDomain=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}')  | oc apply -f -
 # 4) Configure custom certificates using self-signed
-oc apply -k cert-manager-self-signed
+oc apply -k 02-cert-manager-self-signed
 ```
 
 
@@ -105,7 +110,7 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 
 
 
-## 3. Hashicorp Vault
+## 3. HashiCorp Vault
 
 
 [HashiCorp Vault](https://www.hashicorp.com/products/vault) is a secrets management tool that integrates seamlessly with OpenShift (OCP) to securely store and manage sensitive information like API keys, credentials, and certificates. It enables dynamic secrets generation and automated secret renewal, reducing manual overhead and improving security. When combined with OCP, Vault ensures that applications running in your cluster can securely access secrets with fine-grained access control, enhancing the overall security posture of your workloads.
@@ -113,7 +118,7 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 
 ### 3.1. Installation and access
 
-To install Hashicorp Vault on OpenShift, the recommended mechanism is to deploy it with the Helm Chart. For that reason, I've created the following application with the simplest configuration to deploy on OpenShift and automatically create a Route in `dev` mode:
+To install HashiCorp Vault on OpenShift, the recommended mechanism is to deploy it with the Helm Chart. For that reason, I've created the following application with the simplest configuration to deploy on OpenShift and automatically create a Route in `dev` mode:
 
 ```bash
 oc apply -f application-03-hashicorp-vault-server.yaml
@@ -134,16 +139,16 @@ As the `dev` Vault instance is an in-memory instance, just by deleting the `vaul
 ./create_vault_secrets.sh
 ```
 
-Now, you can access the Hashicorp Vault, to the `secret/` Engine and you will see the `demo1`, `demo2`, and `demo3` entries.
+Now, you can access the HashiCorp Vault, to the `secret/` Engine and you will see the `demo1`, `demo2`, and `demo3` entries.
 
 
 
 
 ### 3.3. Useful Links
 
-* Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the Hashicorp Vault Helm repo.
-* Blog: [In-Depth Hashicorp Vault setup on OpenShift using OpenShift GitOps](https://stephennimmo.com/2024/05/05/hashicorp-vault-setup-on-openshift-using-argocd): This is a must read. It is an updated blog on how to customize the Hashicorp Vault deployment.
-* Hashicorp Tutorial: [Install Vault to Red Hat OpenShift](https://developer.hashicorp.com/vault/docs/platform/k8s/helm/openshift) 
+* Git: [GitHub - vault-helm](https://github.com/hashicorp/vault-helm/tree/main). Official repo of the HashiCorp Vault Helm repo.
+* Blog: [In-Depth HashiCorp Vault setup on OpenShift using OpenShift GitOps](https://stephennimmo.com/2024/05/05/hashicorp-vault-setup-on-openshift-using-argocd): This is a must read. It is an updated blog on how to customize the HashiCorp Vault deployment.
+* HashiCorp Tutorial: [Install Vault to Red Hat OpenShift](https://developer.hashicorp.com/vault/docs/platform/k8s/helm/openshift) 
 
 
 
@@ -174,8 +179,12 @@ Here are some common methods for using secrets from HashiCorp Vault in OpenShift
 
 
 > [!TIP]
-> The first method just implies using app framework libraries or pre-exec scripts to retrieve the Secrets from the Hashicorp Vault manually and add them to the application. For that reason, we are not going to explore that possibility.
+> The first method just implies using app framework libraries or pre-exec scripts to retrieve the Secrets from the HashiCorp Vault manually and add them to the application. For that reason, we are not going to explore that possibility.
 
+
+Nice blogs that I've used to compile this comparison:
+
+* [Verifa - Comparing methods for accessing secrets in HashiCorp Vault from Kubernetes](https://verifa.io/blog/comparing-methods-for-accessing-secrets-in-vault-from-kubernetes/)
 
 
 
@@ -201,8 +210,8 @@ or deploy it locally with the following command `kustomize build 05-vault-sideca
 
 ### 6.2. Useful Links
 
-* Docs: [Hashicorp - Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector).
-* Tutorial: [Hashicorp - Mange secrets by injecting a Vault Agent container](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-sidecar).
+* Docs: [HashiCorp - Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector).
+* Tutorial: [HashiCorp - Mange secrets by injecting a Vault Agent container](https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-sidecar).
 
 
 
@@ -284,6 +293,7 @@ or deploy it locally with the following command `kustomize build 06-secrets-stor
 
 
 
+
 ## 7. Vault Secrets Operator (VSO)
 
 [The Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso/openshift) allows Pods to consume Vault secrets and HCP Vault Secrets Apps natively from Kubernetes Secrets. The Operator writes the source Vault secret data directly to the destination Kubernetes Secret, ensuring that any changes made to the source are replicated to the destination over its lifetime.
@@ -306,10 +316,11 @@ oc apply -f application-07-vault-secrets-operator.yaml
 ### 7.3. ⚖️ Pros and Cons of the Vault Secrets Operator
 
 #### ✅ Pros
-* The VSO operator is a certified operator by Hashicorp.
+* The VSO operator is a certified operator by HashiCorp.
 * Integration with Vault Dynamic Secrets.
 * It allows to create secrets without a pod using it, so can be used for OpenShift configuration.
 * Simplified configuration compared to the previous methods.
+* It supports natively Static and Dynamic Secrets.
 
 #### ❌ Cons
 * Documentation is poor and specially when VSO is installed using OLM.
@@ -342,12 +353,27 @@ oc apply -f application-08-external-secrets-operator.yaml
 ### 8.2. Useful Links
 
 
-* https://external-secrets.io/latest/
-* https://github.com/external-secrets/external-secrets-helm-operator
-* https://www.redhat.com/en/blog/external-secrets-with-hashicorp-vault
+* [External Secrets Main site](https://external-secrets.io/latest).
+* [ESO - HashiCorp Vault Provider](https://external-secrets.io/latest/provider/hashicorp-vault).
+* [ESO - GitHub repository](https://github.com/external-secrets/external-secrets-helm-operator).
+* Blog: [External Secrets with HashiCorp Vault](https://www.redhat.com/en/blog/external-secrets-with-hashicorp-vault).
 
 
 
+### 8.3. ⚖️ Pros and Cons of the External Secrets Operator
+
+#### ✅ Pros
+* It allows much more interaction types with the Secret Vault, like `PushSecret`s.
+* 
+
+#### ❌ Cons
+* The provider only supports Static Secrets. For dynamic secrets you need an ESO generator. 
+* The OLM operator has community support 
+* 
+
+#### 💡 Other Considerations
+* Red Hat Tech Preview support is targeted for OpenShift Plus 4.19. See the Jira [here](https://issues.redhat.com/browse/OCPSTRAT-1539).
+* 
 
 
 
@@ -357,10 +383,79 @@ oc apply -f application-08-external-secrets-operator.yaml
 
 ## 9. ArgoCD Vault Plugin
 
-
-* argocd-vault-plugin: https://github.com/argoproj-labs/argocd-vault-plugin
-
+The Argo CD plugin retrieves secrets from various Secret Management tools (HashiCorp Vault, IBM Cloud Secrets Manager, AWS Secrets Manager, etc.) and inject them into Kubernetes resources. 
 
 
 
-NOTE: Añadir cómo cifrar el etcd y alternativas de configuración al respecto?
+### 9.1. Useful Links
+
+
+* Git repo: [argocd-vault-plugin](https://github.com/argoproj-labs/argocd-vault-plugin).
+* Docs: [ArgoCD Vault Plugin](https://argocd-vault-plugin.readthedocs.io/en/stable/howitworks).
+* Blog: [How to Use HashiCorp Vault and Argo CD for GitOps on OpenShift](https://www.redhat.com/en/blog/how-to-use-hashicorp-vault-and-argo-cd-for-gitops-on-openshift).
+
+
+
+### 9.1. ⚖️ Pros and Cons of the ArgoCD Vault Plugin
+
+#### ✅ Pros
+* 
+* 
+
+#### ❌ Cons
+* 
+* 
+* 
+
+#### 💡 Other Considerations
+* 
+* 
+
+
+
+## Extra: Encrypting etcd data
+
+By default, etcd data is not encrypted in OpenShift Container Platform. You can enable etcd encryption for your cluster to provide an additional layer of data security. For example, it can help protect the loss of sensitive data if an etcd backup is exposed to the incorrect parties. When you enable etcd encryption, the following OpenShift API server and Kubernetes API server resources are encrypted:
+
+* Secrets
+* Config maps
+* Routes
+* OAuth access tokens
+* OAuth authorize tokens
+
+To enable etcd encryption, you would set `etcdEncryption.enabled: true` in your values file or pass it as a parameter when installing/upgrading the Helm chart. If you deployed the cert-manager following the steps of the previous  
+
+```bash
+# 3) Configure the OpenShift certificates for Ingress and API
+helm template 02-cert-manager-route53 --set clusterDomain=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}') --set etcdEncryption.enable="true" | oc apply -f -
+```
+
+### Testing encryption configuration
+
+Great! We configured that flag on the APIServer resource, but I really need to make sure that encryption is enabled on the node. That's fine! Use the following commands to check the encryption configuration for each component:
+
+1) Review the `Encrypted` status condition for the **OpenShift API** server to verify that its resources were successfully encrypted:
+
+```bash
+oc get openshiftapiserver -o=jsonpath='{range .items[0].status.conditions[?(@.type=="Encrypted")]}{.reason}{"\n"}{.message}{"\n"}'
+EncryptionCompleted
+All resources encrypted: routes.route.openshift.io
+```
+
+2) Review the `Encrypted` status condition for the **Kubernetes API** server to verify that its resources were successfully encrypted:
+
+```bash
+$ oc get kubeapiserver -o=jsonpath='{range .items[0].status.conditions[?(@.type=="Encrypted")]}{.reason}{"\n"}{.message}{"\n"}'
+EncryptionCompleted
+All resources encrypted: secrets, configmaps
+```
+
+3) Review the `Encrypted` status condition for the **OpenShift OAuth API** server to verify that its resources were successfully encrypted:
+4) 
+```bash
+$ oc get authentication.operator.openshift.io -o=jsonpath='{range .items[0].status.conditions[?(@.type=="Encrypted")]}{.reason}{"\n"}{.message}{"\n"}'
+EncryptionCompleted
+All resources encrypted: oauthaccesstokens.oauth.openshift.io, oauthauthorizetokens.oauth.openshift.io
+```
+
+

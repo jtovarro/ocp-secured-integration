@@ -12,4 +12,7 @@ spec:
         - "api.{{ .Values.clusterDomain }}"
         servingCertificate:
           name: api-certs
-...
+  {{- if .Values.etcdEncryption.enabled }}
+  encryption:
+    type: aescbc
+  {{- end }}

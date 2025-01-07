@@ -18,6 +18,8 @@ spec:
       parameters:
         - name: clusterDomain
           value: $CLUSTER_DOMAIN
+        # - name: etcdEncryption.enabled
+        #   value: "true"
   syncPolicy:
     automated:
       prune: false
