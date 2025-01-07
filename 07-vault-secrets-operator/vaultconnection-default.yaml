@@ -4,5 +4,7 @@ kind: VaultConnection
 metadata:
   name: default
   namespace: test-secrets
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   address: http://hashicorp-vault-server.vault.svc.cluster.local:8200
