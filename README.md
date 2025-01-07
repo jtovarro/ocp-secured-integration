@@ -342,12 +342,25 @@ oc apply -f application-07-vault-secrets-operator.yaml
 [External Secrets Operator](https://external-secrets.io/latest) is a Kubernetes operator that integrates external secret management systems like AWS Secrets Manager, HashiCorp Vault, Google Secrets Manager, Azure Key Vault, IBM Cloud Secrets Manager, CyberArk Conjur, Pulumi ESC and many more. The operator reads information from external APIs and automatically injects the values into a Kubernetes Secret.
 
 
+> [!NOTE]
+> On december 2024, release 0.11.0, the ESO team stopped providing updates via OLM. The reason behind it is due to the coupling nature with our helm charts, which takes precedence over OLM as our first class release mechanism. We recommend OLM users to switch to plain helm chart installs as opposed to keep using OLM helm operator. Yo can check the official statement [here](https://github.com/external-secrets/external-secrets/releases/tag/v0.11.0) and [here](https://github.com/external-secrets/external-secrets-helm-operator/issues/81).
+
+
+
 ### 8.1. Installation and configuration
 
-External-secrets can be managed by Operator Lifecycle Manager (OLM) via an installer operator. This is the best alternative for OpenShift. This operator can be installed using the following ArgoCD application:
+This operator can be installed using the following ArgoCD application, that instantiates the official Helm chart: 
 
 ```bash
 oc apply -f application-08-external-secrets-operator.yaml
+```
+
+or deploy it locally with the following command:
+
+```bash
+helm repo add external-secrets https://charts.external-secrets.io
+
+helm upgrade -i --create-namespace -n external-secrets external-secrets external-secrets/external-secrets  --set "installCRDs=true"
 ```
 
 ### 8.2. Useful Links
@@ -363,17 +376,21 @@ oc apply -f application-08-external-secrets-operator.yaml
 ### 8.3. ⚖️ Pros and Cons of the External Secrets Operator
 
 #### ✅ Pros
-* It allows much more interaction types with the Secret Vault, like `PushSecret`s.
-* 
+* It allows much more interaction types with the Secret Vault, like `PushSecret`s, to push secrets to Vault.
+
 
 #### ❌ Cons
 * The provider only supports Static Secrets. For dynamic secrets you need an ESO generator. 
-* The OLM operator has community support 
-* 
+* The OLM operator has been deprecated.
+
 
 #### 💡 Other Considerations
 * Red Hat Tech Preview support is targeted for OpenShift Plus 4.19. See the Jira [here](https://issues.redhat.com/browse/OCPSTRAT-1539).
-* 
+* As of December 2024, the way to install it is by a Helm Chart supported by the ESO team.
+* Only `ExternalSecret`, `SecretStore`, `ClusterExternalSecret` and `ClusterSecretStore`  [have v1beta1 support](https://external-secrets.io/latest/contributing/roadmap/).
+
+
+
 
 
 
