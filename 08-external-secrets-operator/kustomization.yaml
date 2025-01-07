@@ -4,3 +4,7 @@ kind: Kustomization
 
 resources:
   - sub-external-secrets-operator.yaml
+
+  - secretstore-vault.yaml
+
+  - externalsecret-eso-example.yaml
