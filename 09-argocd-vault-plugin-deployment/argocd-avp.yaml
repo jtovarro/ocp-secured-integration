@@ -11,7 +11,7 @@ spec:
     route:
       enabled: true
   rbac:
-    defaultPolicy: ''
+    defaultPolicy: 'role:admin'
     policy: |
       g, system:cluster-admins, role:admin
     scopes: '[groups]'

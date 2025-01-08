@@ -9,6 +9,7 @@ metadata:
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
+    namespace: test-secrets
   project: default
   source:
     path: 09-argocd-vault-plugin-example
