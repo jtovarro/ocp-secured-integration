@@ -434,7 +434,6 @@ oc apply -f application-09-avp-example.yaml
 
 #### ✅ Pros
 * No need of extra deployments, operators, or deployments.
-* 
 
 #### ❌ Cons
 * Changes behavior of ArgoCD App, as normal `Refresh` button does not recalculate secrets. Needs `Hard Refresh`.
