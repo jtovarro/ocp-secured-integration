@@ -1,0 +1,101 @@
+---
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: argocd-avp
+  namespace: avp-gitops
+spec:
+  server:
+    ingress:
+      enabled: false
+    route:
+      enabled: true
+  rbac:
+    defaultPolicy: ''
+    policy: |
+      g, system:cluster-admins, role:admin
+    scopes: '[groups]'
+  sso:
+    dex:
+      openShiftOAuth: true
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 250m
+          memory: 128Mi
+    provider: dex
+  repo:
+    env:
+      - name: ARGOCD_REPO_SERVER_PLUGIN_TAR_EXCLUSIONS
+        value: ".git/*"
+    mountsatoken: true
+    volumes:
+      - configMap:
+          name: cmp-plugin
+        name: cmp-plugin
+    # This is our sidecar container spec for the vault plugin
+    # Specifically note the mounting of our vault config env vars
+    # via secretRef.
+    sidecarContainers:
+      - name: avp
+        command: [/var/run/argocd/argocd-cmp-server]
+        envFrom:
+          - secretRef:
+              name: avp-backend-secret
+        image: quay.io/jtudelag/argocd-avp-plugin:1.17.0
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /tmp
+            name: tmp
+          # Register plugins into sidecar
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            subPath: avp.yaml
+            name: cmp-plugin
+      - name: avp-kustomize
+        command: [/var/run/argocd/argocd-cmp-server]
+        envFrom:
+          - secretRef:
+              name: avp-backend-secret
+        image: quay.io/jtudelag/argocd-avp-plugin:1.17.0
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /tmp
+            name: tmp
+          # Register plugins into sidecar
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            subPath: avp-kustomize.yaml
+            name: cmp-plugin
+      - name: avp-helm
+        command: [/var/run/argocd/argocd-cmp-server]
+        envFrom:
+          - secretRef:
+              name: avp-backend-secret
+        image: quay.io/jtudelag/argocd-avp-plugin:1.17.0
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /tmp
+            name: tmp
+          # Register plugins into sidecar
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            subPath: avp-helm.yaml
+            name: cmp-plugin

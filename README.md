@@ -30,8 +30,9 @@ This repository explores some of the integrations with credentials and certifica
     - [8.2. Useful Links](#82-useful-links)
     - [8.3. ⚖️ Pros and Cons of the External Secrets Operator](#83-️-pros-and-cons-of-the-external-secrets-operator)
   - [9. ArgoCD Vault Plugin](#9-argocd-vault-plugin)
-    - [9.1. Useful Links](#91-useful-links)
-    - [9.1. ⚖️ Pros and Cons of the ArgoCD Vault Plugin](#91-️-pros-and-cons-of-the-argocd-vault-plugin)
+    - [9.1. Installation and configuration](#91-installation-and-configuration)
+    - [9.2. Useful Links](#92-useful-links)
+    - [9.3. ⚖️ Pros and Cons of the ArgoCD Vault Plugin](#93-️-pros-and-cons-of-the-argocd-vault-plugin)
   - [Extra: Encrypting etcd data](#extra-encrypting-etcd-data)
     - [Testing encryption configuration](#testing-encryption-configuration)
 
@@ -377,6 +378,7 @@ helm upgrade -i --create-namespace -n external-secrets external-secrets external
 
 #### ✅ Pros
 * It allows much more interaction types with the Secret Vault, like `PushSecret`s, to push secrets to Vault.
+* Lot's of integrations with many Secret providers.
 
 
 #### ❌ Cons
@@ -403,30 +405,46 @@ helm upgrade -i --create-namespace -n external-secrets external-secrets external
 The Argo CD plugin retrieves secrets from various Secret Management tools (HashiCorp Vault, IBM Cloud Secrets Manager, AWS Secrets Manager, etc.) and inject them into Kubernetes resources. 
 
 
+### 9.1. Installation and configuration
 
-### 9.1. Useful Links
+This configuration requires deploying an instance of ArgoCD and customizing it. As I don't want to bloat the configuration with unnecessary elements, I will keep it minimal and focused on essential features. Meanwhile, we can deploy a new customized instance with the following command:
+
+```bash
+oc apply -k 09-argocd-vault-plugin-deployment
+```
+
+After the new instance is deployed, we can create a new ArgoCD application with a secret in that new application:
+
+```bash
+oc apply -f application-09-avp-example.yaml
+```
+
+
+
+### 9.2. Useful Links
 
 
 * Git repo: [argocd-vault-plugin](https://github.com/argoproj-labs/argocd-vault-plugin).
 * Docs: [ArgoCD Vault Plugin](https://argocd-vault-plugin.readthedocs.io/en/stable/howitworks).
 * Blog: [How to Use HashiCorp Vault and Argo CD for GitOps on OpenShift](https://www.redhat.com/en/blog/how-to-use-hashicorp-vault-and-argo-cd-for-gitops-on-openshift).
+* GitHub: [jtudelag - ArgoCD Vault Plugin (AVP)](https://github.com/jtudelag/argocd-vault-plugin-demo).
 
 
-
-### 9.1. ⚖️ Pros and Cons of the ArgoCD Vault Plugin
+### 9.3. ⚖️ Pros and Cons of the ArgoCD Vault Plugin
 
 #### ✅ Pros
-* 
+* No need of extra deployments, operators, or deployments.
 * 
 
 #### ❌ Cons
-* 
-* 
-* 
+* Changes behavior of ArgoCD App, as normal `Refresh` button does not recalculate secrets. Needs `Hard Refresh`.
+* Tight couples the CD tool and the Secrets retrieval tool.
+* It adds three new containers to the ArgoCD server pod.
+* Not possible to evaluate the secrets without deploying using GitOps.
+* Not possible to segregate authentication with different users in the same ArgoCD instance.
 
 #### 💡 Other Considerations
-* 
-* 
+* It's not supported to use `kubernetes` [authentication](https://argocd-vault-plugin.readthedocs.io/en/stable/backends/#kubernetes-authentication) against HashiCorp Vault using ArgoCD deployed using the OLM operator, as it does not allow setting a custom ServiceAccount or mounting the SA token. 
 
 
 
