@@ -5,7 +5,7 @@ metadata:
   labels:
     app: hashicorp-vault-server
   name: hashicorp-vault-server
-  namespace: gitops
+  namespace: openshift-gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: cert-manager-self-signed
   name: cert-manager-self-signed
-  namespace: gitops
+  namespace: openshift-gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'

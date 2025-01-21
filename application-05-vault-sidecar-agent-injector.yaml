@@ -5,7 +5,7 @@ metadata:
   labels:
     app: vault-sidecar-agent-injector
   name: vault-sidecar-agent-injector
-  namespace: gitops
+  namespace: openshift-gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
