@@ -84,19 +84,19 @@ fi
 
 
 # Create a policy for the role
-echo -e "\nCreating policy svc-policy..."
+echo -e "\nCreating policy demo-get..."
 curl -s \
     --header "X-Vault-Token: $VAULT_TOKEN" \
     --request PUT \
     --data '{
         "policy": "path \"secret/data/*\" {\n  capabilities = [\"read\"]\n}"
     }' \
-    "$VAULT_ADDR/v1/sys/policies/acl/svc-policy" > /dev/null
+    "$VAULT_ADDR/v1/sys/policies/acl/demo-get" > /dev/null
 
 if [ $? -eq 0 ]; then
-    echo "Policy svc-policy created"
+    echo "Policy demo-get created"
 else
-    echo "Failed to create policy svc-policy"
+    echo "Failed to create policy demo-get"
 fi
 
 # Create a role binding Kubernetes service account to the policy
@@ -107,7 +107,7 @@ curl -s \
     --data '{
         "bound_service_account_names": ["*"],
         "bound_service_account_namespaces": ["*"],
-        "policies": ["svc-policy"],
+        "policies": ["demo-get"],
         "ttl": "1h"
     }' \
     "$VAULT_ADDR/v1/auth/kubernetes/role/webapp" > /dev/null
@@ -116,4 +116,67 @@ if [ $? -eq 0 ]; then
     echo "Role webapp created"
 else
     echo "Failed to create role webapp"
+fi
+
+
+
+# Enable AppRole authentication
+echo -e "\nEnabling AppRole authentication..."
+curl -k -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data '{"type": "approle"}' \
+    "$VAULT_ADDR/v1/sys/auth/approle" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "AppRole authentication enabled"
+else
+    echo "Failed to enable AppRole authentication"
+fi
+
+
+# Binding an AppRole approle to demo-get policy
+echo -e "\nBinding an AppRole approle to demo-get policy..."
+curl -k -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data '{
+        "secret_id_ttl": "120h",
+        "token_num_uses": 1000,
+        "token_ttl": "120h",
+        "token_max_ttl": "120h",
+        "secret_id_num_uses": 4000,
+        "policies": ["demo-get"]
+    }' \
+    "$VAULT_ADDR/v1/auth/approle/role/argocd" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "AppRole argocd created"
+else
+    echo "Failed to create AppRole argocd"
+fi
+
+# Retrieve the role_id for argocd
+echo -e "\nRetrieving role_id for AppRole argocd..."
+ROLE_ID=$(curl -k -s \
+            --header "X-Vault-Token: $VAULT_TOKEN" \
+            "$VAULT_ADDR/v1/auth/approle/role/argocd/role-id" | jq -r '.data.role_id')
+
+if [ $? -eq 0 ] && [ ! -z "$ROLE_ID" ]; then
+    echo "Retrieved role_id for argocd: $ROLE_ID"
+else
+    echo "Failed to retrieve role_id for argocd"
+fi
+
+# Generate a secret_id for argocd
+echo -e "\nGenerating secret_id for AppRole argocd..."
+SECRET_ID=$(curl -k -s \
+              --header "X-Vault-Token: $VAULT_TOKEN" \
+              --request POST \
+              "$VAULT_ADDR/v1/auth/approle/role/argocd/secret-id" | jq -r '.data.secret_id')
+
+if [ $? -eq 0 ] && [ ! -z "$SECRET_ID" ]; then
+    echo "Generated secret_id for argocd: $SECRET_ID"
+else
+    echo "Failed to generate secret_id for argocd"
 fi
