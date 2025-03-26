@@ -99,6 +99,21 @@ else
     echo "Failed to create policy demo-get"
 fi
 
+echo -e "\nCreating policy database-create..."
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request PUT \
+    --data '{
+        "policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\"]\n}\n\npath \"secret/metadata/*\" {\n  capabilities = [\"create\", \"read\", \"update\"]\n}"
+    }' \
+    "$VAULT_ADDR/v1/sys/policies/acl/database-create" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "Policy database-create created"
+else
+    echo "Failed to create policy database-create"
+fi
+
 # Create a role binding Kubernetes service account to the policy
 echo -e "\nCreating role webapp..."
 curl -s \
@@ -107,7 +122,7 @@ curl -s \
     --data '{
         "bound_service_account_names": ["*"],
         "bound_service_account_namespaces": ["*"],
-        "policies": ["demo-get"],
+        "policies": ["demo-get", "database-create"],
         "ttl": "1h"
     }' \
     "$VAULT_ADDR/v1/auth/kubernetes/role/webapp" > /dev/null
