@@ -11,14 +11,17 @@ spec:
   defaultCertificate:
     name: ingress-certs
   nodePlacement:
-    # nodeSelector:
-    #   matchLabels:
+    nodeSelector:
+      matchLabels:
+        kubernetes.io/os: linux
     #     node-role.kubernetes.io/ingress: ""
     tolerations:
-    - key: node-role.kubernetes.io/infra
-      value: reserved
-      effect: NoSchedule
-    - key: node-role.kubernetes.io/infra
-      value: reserved
-      effect: NoExecute
+    # - key: node-role.kubernetes.io/infra
+    #   value: reserved
+    #   effect: NoSchedule
+    # - key: node-role.kubernetes.io/infra
+    #   value: reserved
+    #   effect: NoExecute
+    - effect: NoSchedule
+      operator: Exists
 ...
