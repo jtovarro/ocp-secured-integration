@@ -4,3 +4,6 @@
 
 etcdEncryption:
   enabled: false
+
+route53:
+  region: eu-west-1

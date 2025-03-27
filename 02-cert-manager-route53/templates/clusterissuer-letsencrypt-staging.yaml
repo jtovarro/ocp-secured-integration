@@ -19,7 +19,7 @@ spec:
           accessKeyIDSecretRef:
             name: aws-creds
             key: aws_access_key_id
-          region: eu-west-1
+          region: "{{ .Values.route53.region }}"
           secretAccessKeySecretRef:
             name: aws-creds
             key: aws_secret_access_key
