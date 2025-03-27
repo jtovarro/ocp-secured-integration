@@ -7,7 +7,7 @@ metadata:
   annotations:
     argocd.argoproj.io.io/sync-option: ServerSideApply=true
 spec:
-  replicas: 1
+  replicas: 2
   defaultCertificate:
     name: ingress-certs
   nodePlacement:
