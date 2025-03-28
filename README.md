@@ -2,39 +2,39 @@
 
 This repository explores some of the integrations with credentials and certificates providers.
 
-- [OpenShift Secured Integration](#openshift-secured-integration)
-  - [1. Introduction](#1-introduction)
-  - [2. Cert manager](#2-cert-manager)
-    - [2.1. Installation and configuration](#21-installation-and-configuration)
-    - [2.2. Debugging cert-manager](#22-debugging-cert-manager)
-    - [2.3. Useful Links](#23-useful-links)
-  - [3. HashiCorp Vault](#3-hashicorp-vault)
-    - [3.1. Installation and access](#31-installation-and-access)
-    - [3.2. Initializing Vault Secrets](#32-initializing-vault-secrets)
-    - [3.3. Useful Links](#33-useful-links)
-  - [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
-  - [5. Vault Sidecar Agent Injector](#5-vault-sidecar-agent-injector)
-    - [6.1. Installation and configuration](#61-installation-and-configuration)
-    - [6.2. Useful Links](#62-useful-links)
-    - [6.3. ⚖️ Pros and Cons of Vault Sidecar Agent Injector](#63-️-pros-and-cons-of-vault-sidecar-agent-injector)
-  - [6. Secrets Store CSI Driver](#6-secrets-store-csi-driver)
-    - [6.1. Installation and configuration](#61-installation-and-configuration-1)
-    - [6.2. Useful Links](#62-useful-links-1)
-    - [6.3. ⚖️ Pros and Cons of the Secrets Store CSI Driver](#63-️-pros-and-cons-of-the-secrets-store-csi-driver)
-  - [7. Vault Secrets Operator (VSO)](#7-vault-secrets-operator-vso)
-    - [7.1. Installation and configuration](#71-installation-and-configuration)
-    - [7.2. Useful Links](#72-useful-links)
-    - [7.3. ⚖️ Pros and Cons of the Vault Secrets Operator](#73-️-pros-and-cons-of-the-vault-secrets-operator)
-  - [8. External Secrets Operator (ESO)](#8-external-secrets-operator-eso)
-    - [8.1. Installation and configuration](#81-installation-and-configuration)
-    - [8.2. Useful Links](#82-useful-links)
-    - [8.3. ⚖️ Pros and Cons of the External Secrets Operator](#83-️-pros-and-cons-of-the-external-secrets-operator)
-  - [9. ArgoCD Vault Plugin](#9-argocd-vault-plugin)
-    - [9.1. Installation and configuration](#91-installation-and-configuration)
-    - [9.2. Useful Links](#92-useful-links)
-    - [9.3. ⚖️ Pros and Cons of the ArgoCD Vault Plugin](#93-️-pros-and-cons-of-the-argocd-vault-plugin)
-  - [Extra: Encrypting etcd data](#extra-encrypting-etcd-data)
-    - [Testing encryption configuration](#testing-encryption-configuration)
+1. [OpenShift Secured Integration](#openshift-secured-integration)
+   1. [1. Introduction](#1-introduction)
+   2. [2. Cert manager](#2-cert-manager)
+      1. [2.1. Installation and configuration](#21-installation-and-configuration)
+      2. [2.2. Debugging cert-manager](#22-debugging-cert-manager)
+      3. [2.3. Useful Links](#23-useful-links)
+   3. [3. HashiCorp Vault](#3-hashicorp-vault)
+      1. [3.1. Installation and access](#31-installation-and-access)
+      2. [3.2. Initializing Vault Secrets](#32-initializing-vault-secrets)
+      3. [3.3. Useful Links](#33-useful-links)
+   4. [4. Handling secrets on OpenShift](#4-handling-secrets-on-openshift)
+   5. [5. Vault Sidecar Agent Injector](#5-vault-sidecar-agent-injector)
+      1. [6.1. Installation and configuration](#61-installation-and-configuration)
+      2. [6.2. Useful Links](#62-useful-links)
+      3. [6.3. ⚖️ Pros and Cons of Vault Sidecar Agent Injector](#63-️-pros-and-cons-of-vault-sidecar-agent-injector)
+   6. [6. Secrets Store CSI Driver](#6-secrets-store-csi-driver)
+      1. [6.1. Installation and configuration](#61-installation-and-configuration-1)
+      2. [6.2. Useful Links](#62-useful-links-1)
+      3. [6.3. ⚖️ Pros and Cons of the Secrets Store CSI Driver](#63-️-pros-and-cons-of-the-secrets-store-csi-driver)
+   7. [7. Vault Secrets Operator (VSO)](#7-vault-secrets-operator-vso)
+      1. [7.1. Installation and configuration](#71-installation-and-configuration)
+      2. [7.2. Useful Links](#72-useful-links)
+      3. [7.3. ⚖️ Pros and Cons of the Vault Secrets Operator](#73-️-pros-and-cons-of-the-vault-secrets-operator)
+   8. [8. External Secrets Operator (ESO)](#8-external-secrets-operator-eso)
+      1. [8.1. Installation and configuration](#81-installation-and-configuration)
+      2. [8.2. Useful Links](#82-useful-links)
+      3. [8.3. ⚖️ Pros and Cons of the External Secrets Operator](#83-️-pros-and-cons-of-the-external-secrets-operator)
+   9. [9. ArgoCD Vault Plugin](#9-argocd-vault-plugin)
+      1. [9.1. Installation and configuration](#91-installation-and-configuration)
+      2. [9.2. Useful Links](#92-useful-links)
+      3. [9.3. ⚖️ Pros and Cons of the ArgoCD Vault Plugin](#93-️-pros-and-cons-of-the-argocd-vault-plugin)
+   10. [Extra: Encrypting etcd data](#extra-encrypting-etcd-data)
+       1. [Testing encryption configuration](#testing-encryption-configuration)
 
 
 ## 1. Introduction
@@ -122,7 +122,9 @@ echo Q | openssl s_client -connect $(oc get route console -n openshift-console -
 To install HashiCorp Vault on OpenShift, the recommended mechanism is to deploy it with the Helm Chart. For that reason, I've created the following application with the simplest configuration to deploy on OpenShift and automatically create a Route in `dev` mode:
 
 ```bash
-oc apply -f application-03-hashicorp-vault-server.yaml
+cat application-03-hashicorp-vault-server.yaml | \
+    CLUSTER_DOMAIN=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}') \
+    envsubst | oc apply -f -
 ```
 
 In order to access the deployed Vault server, just retrieve the route using the following command and access the UI using the token `root`:
