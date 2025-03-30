@@ -1,0 +1,19 @@
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: vault-auth
+  namespace: test-secrets
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  vaultAuthGlobalRef:
+    allowDefault: true
+    namespace: test-secrets
+  kubernetes:
+    role: webapp
+    serviceAccount: static-auth
+  # Automatic sync, only with Enterprise edition
+  # https://developer.hashicorp.com/vault/docs/platform/k8s/vso/sources/vault/instant-updates
+  # syncConfig:
+  #   instantUpdates: true

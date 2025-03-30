@@ -1,0 +1,22 @@
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuthGlobal
+metadata:
+  name: default
+  namespace: test-secrets
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  vaultConnectionRef: default
+  allowedNamespaces:
+    - test-secrets
+    - "*"
+  defaultAuthMethod: kubernetes
+  kubernetes:
+    audiences:
+      - vault
+    mount: kubernetes
+    # This is the default because does not provide any access
+    role: default
+    serviceAccount: default
+    tokenExpirationSeconds: 600

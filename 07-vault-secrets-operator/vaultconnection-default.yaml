@@ -8,3 +8,13 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   address: http://hashicorp-vault-server.vault.svc.cluster.local:8200
+
+  # # optional configuration
+  # # HTTP headers to be included in all Vault requests.
+  # headers: []
+  # # TLS server name to use as the SNI host for TLS connections.
+  # tlsServerName: ""
+  # # skip TLS verification for TLS connections to Vault.
+  # skipTLSVerify: false
+  # # the trusted PEM encoded CA certificate chain stored in a Kubernetes Secret
+  # caCertSecretRef: ""

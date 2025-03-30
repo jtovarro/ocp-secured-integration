@@ -301,11 +301,33 @@ or deploy it locally with the following command `kustomize build 06-secrets-stor
 
 [The Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso/openshift) allows Pods to consume Vault secrets and HCP Vault Secrets Apps natively from Kubernetes Secrets. The Operator writes the source Vault secret data directly to the destination Kubernetes Secret, ensuring that any changes made to the source are replicated to the destination over its lifetime.
 
+Which are the main features?
+
+* `VaultStaticSecret`: Synchronize a single Vault static Secret to a single Kubernetes Secret.
+* `VaultPKISecret`: Synchronize a single Vault PKI Secret. The [PKI secrets engine](https://developer.hashicorp.com/vault/docs/secrets/pki) generates dynamic X.509 certificates. With this secrets engine, services can get certificates without going through the usual manual process
+* `VaultDynamicSecret`: Use secrets engines like databases, aws, azure, gcp, etc. to generate a single Vault dynamic Secret and sync it to a single Kubernetes Secret.
+
 
 ### 7.1. Installation and configuration
 
 ```bash
 oc apply -f application-07-vault-secrets-operator.yaml
+```
+
+**Do you want to check the Certificate content?**
+
+```bash
+oc -n test-secrets get secret vso-pki -o jsonpath='{.data.certificate}' | base64 -d
+```
+
+**Do you want to check the Certificate validity?**
+
+```bash
+oc -n test-secrets exec -it vso-pki-cert-checker -- openssl x509 -in /etc/pki/certificate -noout -text | grep -E '(Subject|Issuer|Not Before|Not After ):'
+        Issuer: CN=my-website.com
+            Not Before: Mar 30 10:21:27 2025 GMT
+            Not After : Mar 30 10:22:57 2025 GMT
+        Subject: CN=www.my-website.com
 ```
 
 

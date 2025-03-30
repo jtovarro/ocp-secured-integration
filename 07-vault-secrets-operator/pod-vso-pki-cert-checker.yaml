@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vso-pki-cert-checker
+  namespace: test-secrets
+spec:
+  containers:
+  - name: cert-verifier
+    image: registry.redhat.io/ubi9/ubi:latest
+    command: ["sleep", "infinity"]
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+    volumeMounts:
+    - name: pki-secrets
+      mountPath: "/etc/pki"
+      readOnly: true
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  volumes:
+  - name: pki-secrets
+    secret:
+      secretName: vso-pki
+      optional: false # default setting; "mysecret" must exist
+  terminationGracePeriodSeconds: 0
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: vso-pki-cert-checker
+  namespace: test-secrets
+spec:
+  selector:
+    app: tls-app
+  ports:
+    - port: 443
+      targetPort: 8080

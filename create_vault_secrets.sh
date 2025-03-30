@@ -4,6 +4,11 @@
 VAULT_ADDR="$(oc get route hashicorp-vault-server -n vault --template='https://{{.spec.host}}')"
 VAULT_TOKEN="root"                  # Default token in dev mode
 
+
+echo -e "\n========================="
+echo -e "= Create Static Secrets ="
+echo -e "=========================\n"
+
 # Inline JSON definition of secrets
 SECRETS_JSON='[
     {
@@ -30,7 +35,7 @@ SECRETS_JSON='[
 ]'
 
 # Parse JSON and upload secrets
-echo -e "\nCreating dummy Secrets..."
+echo -e "\nCreating static Secrets..."
 for row in $(echo "$SECRETS_JSON" | jq -c '.[]'); do
     path=$(echo "$row" | jq -r '.path')
     data=$(echo "$row" | jq -c '.data')
@@ -48,6 +53,94 @@ for row in $(echo "$SECRETS_JSON" | jq -c '.[]'); do
         echo "Failed to write secret to $path"
     fi
 done
+
+
+echo -e "\n==================="
+echo -e "= Create Policies ="
+echo -e "===================\n"
+
+echo -e "\nCreating policy demo-get..."
+read -r -d '' DEMO_GET_POLICY << EOM
+path "secret/data/*" {
+  capabilities = ["read"]
+}
+EOM
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request PUT \
+    --data "{\"policy\": $(echo "$DATABASE_CREATE_POLICY" | jq -R -s .)}" \ \
+    "$VAULT_ADDR/v1/sys/policies/acl/demo-get" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "Policy demo-get created"
+else
+    echo "Failed to create policy demo-get"
+fi
+
+
+
+echo -e "\nCreating policy database-create..."
+read -r -d '' DATABASE_CREATE_POLICY << EOM
+path "secret/data/*" {
+  capabilities = ["create", "read", "update"]
+}
+
+path "secret/metadata/*" {
+  capabilities = ["create", "read", "update"]
+}
+EOM
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request PUT \
+    --data "{\"policy\": $(echo "$DATABASE_CREATE_POLICY" | jq -R -s .)}" \
+    "$VAULT_ADDR/v1/sys/policies/acl/database-create" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "Policy database-create created"
+else
+    echo "Failed to create policy database-create"
+fi
+
+
+
+echo -e "\nCreating policy pki-mgmt..."
+read -r -d '' PKI_MGMT_POLICY << EOM
+# Work with transform secrets engine
+# path "sys/managed-keys/*" {
+#   capabilities = [ "create", "read", "update", "list" ]
+# }
+
+# Enable secrets engine
+path "pki/*" {
+  capabilities = [ "create", "read", "update", "delete", "list" ]
+}
+
+# List enabled secrets engine
+path "sys/mounts" {
+  capabilities = [ "read", "list" ]
+}
+
+# Tune mounts
+path "sys/mounts/pki/tune" {
+  capabilities = ["create", "update"]
+}
+EOM
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request PUT \
+    --data "{\"policy\": $(echo "$PKI_MGMT_POLICY" | jq -R -s .)}" \
+    "$VAULT_ADDR/v1/sys/policies/acl/pki-mgmt" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "Policy pki-mgmt created"
+else
+    echo "Failed to create policy pki-mgmt"
+fi
+
+
+echo -e "\n======================"
+echo -e "= K8s Authentication ="
+echo -e "======================\n"
 
 # Enable Kubernetes authentication
 echo -e "\nEnabling Kubernetes authentication..."
@@ -83,48 +176,20 @@ else
 fi
 
 
-# Create a policy for the role
-echo -e "\nCreating policy demo-get..."
-curl -s \
-    --header "X-Vault-Token: $VAULT_TOKEN" \
-    --request PUT \
-    --data '{
-        "policy": "path \"secret/data/*\" {\n  capabilities = [\"read\"]\n}"
-    }' \
-    "$VAULT_ADDR/v1/sys/policies/acl/demo-get" > /dev/null
-
-if [ $? -eq 0 ]; then
-    echo "Policy demo-get created"
-else
-    echo "Failed to create policy demo-get"
-fi
-
-echo -e "\nCreating policy database-create..."
-curl -s \
-    --header "X-Vault-Token: $VAULT_TOKEN" \
-    --request PUT \
-    --data '{
-        "policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\"]\n}\n\npath \"secret/metadata/*\" {\n  capabilities = [\"create\", \"read\", \"update\"]\n}"
-    }' \
-    "$VAULT_ADDR/v1/sys/policies/acl/database-create" > /dev/null
-
-if [ $? -eq 0 ]; then
-    echo "Policy database-create created"
-else
-    echo "Failed to create policy database-create"
-fi
-
 # Create a role binding Kubernetes service account to the policy
 echo -e "\nCreating role webapp..."
+read -r -d '' WEBAPP_ROLE << EOM
+{
+  "bound_service_account_names": ["*"],
+  "bound_service_account_namespaces": ["*"],
+  "policies": ["demo-get", "database-create", "pki-mgmt"],
+  "ttl": "1h"
+}
+EOM
 curl -s \
     --header "X-Vault-Token: $VAULT_TOKEN" \
     --request POST \
-    --data '{
-        "bound_service_account_names": ["*"],
-        "bound_service_account_namespaces": ["*"],
-        "policies": ["demo-get", "database-create"],
-        "ttl": "1h"
-    }' \
+    --data "$WEBAPP_ROLE" \
     "$VAULT_ADDR/v1/auth/kubernetes/role/webapp" > /dev/null
 
 if [ $? -eq 0 ]; then
@@ -134,6 +199,9 @@ else
 fi
 
 
+echo -e "\n=========================="
+echo -e "= AppRole Authentication ="
+echo -e "==========================\n"
 
 # Enable AppRole authentication
 echo -e "\nEnabling AppRole authentication..."
@@ -152,17 +220,20 @@ fi
 
 # Binding an AppRole approle to demo-get policy
 echo -e "\nBinding an AppRole approle to demo-get policy..."
+read -r -d '' ARGOCD_APPROLE << EOM
+{
+  "secret_id_ttl": "120h",
+  "token_num_uses": 1000,
+  "token_ttl": "120h",
+  "token_max_ttl": "120h",
+  "secret_id_num_uses": 4000,
+  "policies": ["demo-get"]
+}
+EOM
 curl -k -s \
     --header "X-Vault-Token: $VAULT_TOKEN" \
     --request POST \
-    --data '{
-        "secret_id_ttl": "120h",
-        "token_num_uses": 1000,
-        "token_ttl": "120h",
-        "token_max_ttl": "120h",
-        "secret_id_num_uses": 4000,
-        "policies": ["demo-get"]
-    }' \
+    --data "$ARGOCD_APPROLE" \ \
     "$VAULT_ADDR/v1/auth/approle/role/argocd" > /dev/null
 
 if [ $? -eq 0 ]; then
@@ -195,3 +266,105 @@ if [ $? -eq 0 ] && [ ! -z "$SECRET_ID" ]; then
 else
     echo "Failed to generate secret_id for argocd"
 fi
+
+
+
+echo -e "\n============================"
+echo -e "= Setup PKI secrets engine ="
+echo -e "============================\n"
+# This section is based on the official documentation
+# https://developer.hashicorp.com/vault/docs/secrets/pki/setup
+
+# Enable PKI secrets engine
+echo -e "\nEnabling PKI secrets engine..."
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data '{"type":"pki"}' \
+    "$VAULT_ADDR/v1/sys/mounts/pki" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "PKI secrets engine enabled"
+else
+    echo "Failed to enable PKI secrets engine"
+fi
+
+# Tune PKI TTL
+echo -e "\nTuning PKI TTL..."
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data '{"max_lease_ttl":"8760h"}' \
+    "$VAULT_ADDR/v1/sys/mounts/pki/tune" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "PKI TTL tuned to 1 year"
+else
+    echo "Failed to tune PKI TTL"
+fi
+
+# Generate Root CA
+echo -e "\nGenerating Root CA..."
+read -r -d '' ROOT_CA << EOM
+{
+    "common_name": "my-website.com",
+    "ttl": "8760h"
+}
+EOM
+
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$ROOT_CA" \
+    "$VAULT_ADDR/v1/pki/root/generate/internal" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "Root CA generated"
+else
+    echo "Failed to generate Root CA"
+fi
+
+# Configure URLs
+echo -e "\nConfiguring URLs..."
+read -r -d '' URLS << EOM
+{
+    "issuing_certificates": ["http://127.0.0.1:8200/v1/pki/ca"],
+    "crl_distribution_points": ["http://127.0.0.1:8200/v1/pki/crl"]
+}
+EOM
+
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$URLS" \
+    "$VAULT_ADDR/v1/pki/config/urls" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "URLs configured"
+else
+    echo "Failed to configure URLs"
+fi
+
+# Create PKI role
+echo -e "\nCreating PKI role..."
+read -r -d '' PKI_ROLE << EOM
+{
+    "allowed_domains": "my-website.com",
+    "allow_subdomains": true,
+    "max_ttl": "72h"
+}
+EOM
+
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$PKI_ROLE" \
+    "$VAULT_ADDR/v1/pki/roles/example-dot-com" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "PKI role example-dot-com created"
+else
+    echo "Failed to create PKI role"
+fi
+
+

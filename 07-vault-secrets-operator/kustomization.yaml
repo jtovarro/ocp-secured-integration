@@ -3,12 +3,23 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+
   - sub-vault-secrets-operator.yaml
 
-  - vaultauth-static-auth.yaml
-  - sa-static-auth.yaml
+  # Global Authentication
+  - vaultauthglobal-default.yaml
   - vaultconnection-default.yaml
+  - sa-static-auth.yaml
 
+  # Per namespace auth config
+  - vaultauth-vault-auth.yaml
+
+  # Retrieve a Static Secret from Vault
   - vaultstaticsecret-vso-static.yaml
 
+  # Retrieve a Certificate Signed by Vault
+  - vaultpkisecret-vso-certificate.yaml
+  - pod-vso-pki-cert-checker.yaml
+
+  # Retrieve a generated Secret from Vault
   # - vaultdynamicsecret-vso-dynamic.yaml
