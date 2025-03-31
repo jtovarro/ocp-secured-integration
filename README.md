@@ -305,7 +305,7 @@ Which are the main features?
 
 * `VaultStaticSecret`: Synchronize a single Vault static Secret to a single Kubernetes Secret.
 * `VaultPKISecret`: Synchronize a single Vault PKI Secret. The [PKI secrets engine](https://developer.hashicorp.com/vault/docs/secrets/pki) generates dynamic X.509 certificates. With this secrets engine, services can get certificates without going through the usual manual process
-* `VaultDynamicSecret`: Use secrets engines like databases, aws, azure, gcp, etc. to generate a single Vault dynamic Secret and sync it to a single Kubernetes Secret.
+* `VaultDynamicSecret`: Use secrets engines like databases, aws, azure, gcp, etc. to generate a single Vault dynamic Secret and sync it to a single Kubernetes Secret. Use Vault dynamic secrets to create secrets when accessed and to invalidate the secrets after use.
 
 
 ### 7.1. Installation and configuration
@@ -329,6 +329,19 @@ oc -n test-secrets exec -it vso-pki-cert-checker -- openssl x509 -in /etc/pki/ce
             Not After : Mar 30 10:22:57 2025 GMT
         Subject: CN=www.my-website.com
 ```
+
+**Do you want to check the Dynamic Feature?**
+
+Then, you need to install the MySQL DB and you can use the following chart as example:
+
+```bash
+helm upgrade --install mysql oci://registry-1.docker.io/bitnamicharts/mysql \
+   --namespace vault \
+   --version 12.3.2 \
+   --values 07-vault-secrets-operator/mysql-values.yaml
+```
+
+
 
 
 ### 7.2. Useful Links

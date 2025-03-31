@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
 
+  - ns-vault-secrets-operator.yaml
   - sub-vault-secrets-operator.yaml
 
   # Global Authentication
@@ -22,4 +23,12 @@ resources:
   - pod-vso-pki-cert-checker.yaml
 
   # Retrieve a generated Secret from Vault
-  # - vaultdynamicsecret-vso-dynamic.yaml
+  - vaultdynamicsecret-vso-dynamic.yaml
+
+# helmCharts:
+#   - name: mysql
+#     repo: oci://registry-1.docker.io/bitnamicharts
+#     version: 12.3.1
+#     releaseName: mysql
+#     namespace: test-secrets
+#     valuesFile: mysql-values.yaml

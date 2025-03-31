@@ -78,7 +78,7 @@ else
 fi
 
 
-
+# This is for External Secrets Operator PushSecret
 echo -e "\nCreating policy database-create..."
 read -r -d '' DATABASE_CREATE_POLICY << EOM
 path "secret/data/*" {
@@ -138,6 +138,31 @@ else
 fi
 
 
+echo -e "\nCreating policy dynamic-db..."
+read -r -d '' DYNAMIC_POLICY << EOM
+# Allow reading dynamic secrets
+path "database/*" {
+  capabilities = ["read", "list"]
+}
+
+# Allow creating dynamic credentials (if needed)
+path "database/creds/*" {
+  capabilities = ["read", "list"]
+}
+EOM
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request PUT \
+    --data "{\"policy\": $(echo "$DYNAMIC_POLICY" | jq -R -s .)}" \
+    "$VAULT_ADDR/v1/sys/policies/acl/dynamic-db" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "Policy dynamic-db created"
+else
+    echo "Failed to create policy dynamic-db"
+fi
+
+
 echo -e "\n======================"
 echo -e "= K8s Authentication ="
 echo -e "======================\n"
@@ -182,7 +207,7 @@ read -r -d '' WEBAPP_ROLE << EOM
 {
   "bound_service_account_names": ["*"],
   "bound_service_account_namespaces": ["*"],
-  "policies": ["demo-get", "database-create", "pki-mgmt"],
+  "policies": ["demo-get", "database-create", "pki-mgmt", "dynamic-db"],
   "ttl": "1h"
 }
 EOM
@@ -368,3 +393,92 @@ else
 fi
 
 
+echo -e "\n============================"
+echo -e "= Setup DB secrets engine  ="
+echo -e "============================\n"
+# This section is based on the official documentation
+# https://developer.hashicorp.com/vault/docs/secrets/databases
+
+# Enable DB secrets engine
+echo -e "\nEnabling DB secrets engine..."
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data '{"type":"database"}' \
+    "$VAULT_ADDR/v1/sys/mounts/database" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "DB secrets engine enabled"
+else
+    echo "Failed to enable DB secrets engine"
+fi
+
+# Configure MySQL connection
+echo -e "\nConfiguring MySQL connection..."
+read -r -d '' DB_CONFIG << EOM
+{
+    "plugin_name": "mysql-database-plugin",
+    "connection_url": "{{username}}:{{password}}@tcp(mysql.vault.svc:3306)/",
+    "allowed_roles": "my-db-role",
+    "username": "mysql-user",
+    "password": "mysql-password",
+    "tls_skip_verify": true,
+    "max_open_connections": 5,
+    "max_idle_connections": 2
+}
+EOM
+
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$DB_CONFIG" \
+    "$VAULT_ADDR/v1/database/config/my-mysql" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "MySQL connection configured"
+else
+    echo "Failed to configure MySQL connection"
+fi
+
+# Rotate root credentials
+echo -e "\nRotating MySQL root credentials..."
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    "$VAULT_ADDR/v1/database/rotate-root/my-mysql" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "MySQL root credentials rotated"
+else
+    echo "Failed to rotate MySQL credentials"
+fi
+
+# Create MySQL role
+echo -e "\nCreating MySQL role..."
+read -r -d '' DB_ROLE << EOM
+{
+    "db_name": "my-mysql",
+    "creation_statements": [
+        "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
+        "GRANT SELECT, INSERT, UPDATE, DELETE ON myapp.* TO '{{name}}'@'%';",
+        "ALTER USER '{{name}}'@'%' WITH MAX_USER_CONNECTIONS 3"
+    ],
+    "default_ttl": "1h",
+    "max_ttl": "24h",
+    "revocation_statements": [
+        "DROP USER '{{name}}'@'%';"
+    ]
+}
+EOM
+
+curl -s \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$DB_ROLE" \
+    "$VAULT_ADDR/v1/database/roles/my-db-role" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "MySQL role my-db-role created"
+else
+    echo "Failed to create MySQL role"
+fi

@@ -3,11 +3,11 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuthGlobal
 metadata:
   name: default
-  namespace: test-secrets
+  namespace: vault-secrets-operator
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  vaultConnectionRef: default
+  vaultConnectionRef: vault-secrets-operator/default
   allowedNamespaces:
     - test-secrets
     - "*"

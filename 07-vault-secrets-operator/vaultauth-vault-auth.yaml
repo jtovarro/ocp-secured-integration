@@ -9,7 +9,7 @@ metadata:
 spec:
   vaultAuthGlobalRef:
     allowDefault: true
-    namespace: test-secrets
+    namespace: vault-secrets-operator
   kubernetes:
     role: webapp
     serviceAccount: static-auth
