@@ -309,7 +309,7 @@ Which are the main features?
 
 
 > [!TIP]
-> Vault's database secrets engine provides a credential management solution so that the username and password can be dynamically generated upon request, and you can control the lifecycle of the credentials:
+> [Vault's database secrets](https://developer.hashicorp.com/vault/tutorials/db-credentials/database-secrets) engine provides a credential management solution so that the username and password can be dynamically generated upon request, and you can control the lifecycle of the credentials:
 > ![alt text](docs/images/assets.avif)
 
 
