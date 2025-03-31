@@ -308,6 +308,11 @@ Which are the main features?
 * `VaultDynamicSecret`: Use secrets engines like databases, aws, azure, gcp, etc. to generate a single Vault dynamic Secret and sync it to a single Kubernetes Secret. Use Vault dynamic secrets to create secrets when accessed and to invalidate the secrets after use.
 
 
+> [!TIP]
+> Vault's database secrets engine provides a credential management solution so that the username and password can be dynamically generated upon request, and you can control the lifecycle of the credentials:
+> ![alt text](docs/images/assets.avif)
+
+
 ### 7.1. Installation and configuration
 
 ```bash
