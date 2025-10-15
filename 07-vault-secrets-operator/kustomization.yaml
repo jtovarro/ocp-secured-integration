@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
 
   - ns-vault-secrets-operator.yaml
+  - ns-test-secrets.yaml
   - sub-vault-secrets-operator.yaml
 
   # Global Authentication
